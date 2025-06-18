@@ -287,6 +287,11 @@ references = {
     "Rosenthal_1991": ["Rosenthal, R. (1991) <em>Meta-analytic procedures for social research<em> (revised edition). "
                        "Sage, Newbury Park, CA.", "Rosenthal (1991)", ""],
 
+    "Schild_Voracek_2014": ["Schild, A.H.E., and M. Voracek (2014) Finding your way out of the forest without a "
+                            "trail of bread crumbs: Development and evaluation of two novel displays of forest plots. "
+                            "<em>Research Synthesis Methods</em> 6:74&ndash;86.", "Schild and Voracek (2014)",
+                            "10.1002/jrsm.1125"],
+
     "Sokal_Rohlf_1995": ["Sokal, R.R., and F.J. Rohlf (1995) <em>Biometry</em> (3rd edition). Freeman, San Francisco.",
                          "Sokal and Rohlf (1995)", ""],
 

@@ -26,6 +26,11 @@ WEIGHT_NONE = 0
 WEIGHT_INVVAR = 1
 WEIGHT_N = 2
 
+# style options for forest plots
+FP_STYLE_PLAIN = 0
+FP_STYLE_SCALED = 1
+FP_STYLE_THICK = 2
+
 LINE_STYLES = ("solid", "dashed", "dotted", "dashdot")
 # MARKER_STYLES = {"point": ".", "circle": "o", "downward triangle": "v", "upward triangle": "^",
 #                  "left triangle": "<", "right triangle": ">", "downard tri": "1", "upward tri": "2", "left tri": "3",
@@ -740,6 +745,7 @@ class ForestPlotBaseCaption:
         self.medians = None
         self.boot = None
         self.bias = None
+        self.style = FP_STYLE_PLAIN
 
     def base_forest_plot_caption(self) -> str:
         """
@@ -774,9 +780,19 @@ class ForestPlotBaseCaption:
 
 class ForestPlotCaption(ForestPlotBaseCaption):
     def __str__(self):
-        return get_text("Forest plot of individual effect sizes for each study.") + \
-               self.base_forest_plot_caption() + \
-               get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha)
+        if self.style == FP_STYLE_SCALED:
+            scale_text = get_text("forest plot scaled means")
+            cite_text = ""
+        elif self.style == FP_STYLE_THICK:
+            scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        else:
+            scale_text = ""
+            cite_text = ""
+        return (get_text("Forest plot of individual effect sizes for each study.") +
+                self.base_forest_plot_caption() +
+                get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha) + scale_text +
+                cite_text)
 
 
 class BasicAnalysisCaption(ForestPlotBaseCaption):
@@ -1122,7 +1138,7 @@ def create_figure(chart_data, figure_canvas):
 
 def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float = 0.05,
                       bootstrap_n: Optional[int] = None, extra_name: Optional[str] = None,
-                      normal_ci: bool = True) -> ChartData:
+                      normal_ci: bool = True, fp_style: int = 0) -> ChartData:
     chart_data = ChartData(analysis_type)
     chart_data.caption.e_label = effect_name
     chart_data.caption.alpha = alpha
@@ -1157,6 +1173,27 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     else:
         median_data = None
 
+    # used for scaled and thick styles
+    weights = [1/d.variance for d in forest_data]  # get weights
+    minw, maxw = min(weights), max(weights)
+    wrange = maxw - minw
+
+    if fp_style == FP_STYLE_SCALED:
+        size = [1+99*(w - minw)/wrange for w in weights]  # scale between 1 and 100
+        marker = "o"
+        marker_color = "#1f77b4"
+        linewidth = 1.5
+    elif fp_style == FP_STYLE_THICK:
+        size = 100
+        marker = "|"
+        marker_color = "red"
+        linewidth = [1+9*(w - minw)/wrange for w in weights]  # scale between 1 and 10
+    else:
+        size = 36
+        marker = "o"
+        marker_color = "#1f77b4"
+        linewidth = 1.5
+
     cis = []
     bs_cis = []
     bias_cis = []
@@ -1173,9 +1210,11 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
 
     chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(n_effects+1),
                                                        color="silver", linestyle="dotted", zorder=1)
-    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3)
-    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker="o", zorder=5,
-                                                      label="mean and {:0.0%} CI (t-dist)".format(1-alpha))
+    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth)
+    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker=marker, zorder=5,
+                                                      label="mean and {:0.0%} CI (t-dist)".format(1-alpha), size=size,
+                                                      color=marker_color)
+    chart_data.caption.style = fp_style
     if median_data is not None:
         chart_data.caption.medians = chart_data.add_scatter(get_text("Medians"), median_data, y_data, marker="x",
                                                             label="median", zorder=5, color="#ff7f0e")

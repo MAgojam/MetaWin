@@ -256,6 +256,9 @@ class MetaAnalysisDrawForestDialog(QDialog):
         self.effect_size_box = None
         self.variance_box = None
         self.columns = None
+        self.style_plain = None
+        self.style_scaled = None
+        self.style_thick = None
         self.init_ui(data, last_effect, last_var)
 
     def init_ui(self, data: MetaWinData, last_effect, last_var):
@@ -272,6 +275,19 @@ class MetaAnalysisDrawForestDialog(QDialog):
         options_layout.addWidget(self.effect_size_box)
         options_layout.addWidget(variance_label)
         options_layout.addWidget(self.variance_box)
+
+        style_group_box = QGroupBox(get_text("Forest Plot Style"))
+        style_layout = QVBoxLayout()
+        self.style_plain = QRadioButton(get_text("Plain"))
+        self.style_scaled = QRadioButton(get_text("Scaled Effect Size"))
+        self.style_thick = QRadioButton(get_text("Thick"))
+        style_layout.addWidget(self.style_plain)
+        style_layout.addWidget(self.style_scaled)
+        style_layout.addWidget(self.style_thick)
+        style_group_box.setLayout(style_layout)
+        self.style_plain.setChecked(True)
+        options_layout.addWidget(style_group_box)
+
 
         main_frame = QFrame()
         main_frame.setFrameShape(QFrame.Shape.Panel)
@@ -548,7 +564,7 @@ def draw_histogram_dialog(sender, data, last_effect, last_var):
     return None
 
 
-def draw_forest_plot(data, e_data_col, v_data_col, alpha: float = 0.05):
+def draw_forest_plot(data, e_data_col, v_data_col, alpha: float = 0.05, fp_style: int = 0):
     bad_data = []
     filtered = []
     y = 0
@@ -560,13 +576,13 @@ def draw_forest_plot(data, e_data_col, v_data_col, alpha: float = 0.05):
             if (e is not None) and (v is not None) and (v > 0):
                 y += 1
                 tmp_lower, tmp_upper = scipy.stats.norm.interval(confidence=1 - alpha, loc=e, scale=math.sqrt(v))
-                data_list.append(mean_data_tuple(row.label, y, 0, e, None, 0, 0, tmp_lower, tmp_upper, 0, 0, 0, 0))
+                data_list.append(mean_data_tuple(row.label, y, 0, e, None, v, 0, tmp_lower, tmp_upper, 0, 0, 0, 0))
             else:
                 bad_data.append(row.label)
         else:
             filtered.append(row.label)
 
-    return MetaWinCharts.chart_forest_plot("forest plot", e_data_col.label, data_list, alpha, None)
+    return MetaWinCharts.chart_forest_plot("forest plot", e_data_col.label, data_list, alpha, None, fp_style=fp_style)
 
 
 def draw_forest_dialog(sender, data, last_effect, last_var, alpha: float = 0.05):
@@ -574,7 +590,15 @@ def draw_forest_dialog(sender, data, last_effect, last_var, alpha: float = 0.05)
     if sender.draw_dialog.exec():
         e_data_col = sender.draw_dialog.columns[sender.draw_dialog.effect_size_box.currentIndex()]
         v_data_col = sender.draw_dialog.columns[sender.draw_dialog.variance_box.currentIndex()]
-        chart_data = draw_forest_plot(data, e_data_col, v_data_col, alpha)
+
+        if sender.draw_dialog.style_scaled.isChecked():
+            fp_style = MetaWinCharts.FP_STYLE_SCALED
+        elif sender.draw_dialog.style_thick.isChecked():
+            fp_style = MetaWinCharts.FP_STYLE_THICK
+        else:
+            fp_style = MetaWinCharts.FP_STYLE_PLAIN
+
+        chart_data = draw_forest_plot(data, e_data_col, v_data_col, alpha, fp_style)
         if chart_data is not None:
             return chart_data
         else:

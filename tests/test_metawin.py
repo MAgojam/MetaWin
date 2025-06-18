@@ -1330,6 +1330,26 @@ def test_forest_plot():
         test_win.exec()
 
 
+def test_scaled_forest_plot():
+    data, _ = calc_hedges_d()
+    e_col = data.cols[10]
+    v_col = data.cols[11]
+    if TEST_FIGURES:
+        chart_data = MetaWinDraw.draw_forest_plot(data, e_col, v_col, fp_style=MetaWinCharts.FP_STYLE_SCALED)
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_thick_forest_plot():
+    data, _ = calc_hedges_d()
+    e_col = data.cols[10]
+    v_col = data.cols[11]
+    if TEST_FIGURES:
+        chart_data = MetaWinDraw.draw_forest_plot(data, e_col, v_col, fp_style=MetaWinCharts.FP_STYLE_THICK)
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
 def test_trim_and_fill_analysis():
     """
     funnel_test.txt contains a simulated data set; a true funnel plot was simulated where variance around a true

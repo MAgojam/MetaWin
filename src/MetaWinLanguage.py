@@ -147,6 +147,9 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                           "Forest plot of individual effect sizes for each study, as well as the overall mean.",
                       "study_forest_plot_extra": " Study effect sizes are indicated by {}, with the corresponding line "
                                                  "the {:0.0%} confidence interval based on a Normal distribution.",
+                      "forest plot scaled means": " The size of the mean marker is proportional to the study weight.",
+                      "forest plot thick": " The height (thickness) of the line indicating the confidence interval is "
+                                           "proportional to the study weight, after {}.",
                       "basic_analysis_forest_plot_extra": " Study and mean effect sizes are indicated by {}, with the "
                                                           "corresponding line the {:0.0%} confidence interval based on "
                                                           "{}.",
@@ -156,6 +159,10 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "t_ci_dist": "Student's t distribution",
                       "mixed_ci_dist": "Student's t distribution for the mean and the Normal distribution for the "
                                        "individual studies",
+                      "Forest Plot Style": "Forest Plot Style",
+                      "Plain": "Plain",
+                      "Scaled Effect Size": "Scaled Effect Size",
+                      "Thick": "Thick",
                       "forest_plot_common_caption1": " Effect size measured as {}. The vertical {} represents no "
                                                      "effect.",
                       "forest_plot_common_caption2": " Effect size measured as {}. The vertical {} "
