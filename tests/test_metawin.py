@@ -213,6 +213,28 @@ def test_hedges_d() -> None:
         assert round(data.value(r, 11).value, 4) == answer[r][1]
 
 
+def test_hedges_missing_data() -> None:
+    """
+    Not a formal test. This is used to confirm what is happening when data is missing and if it needs
+    to be adjusted to something else.
+    """
+    data, import_output = import_test_data("missing_d.txt")
+    print_test_output(import_output)
+
+    options = EffectSizeOptions()
+    options.effect_size = MetaWinEffectFunctions.hedges_d_function()
+    options.control_means = data.cols[4]
+    options.treatment_means = data.cols[5]
+    options.control_sd = data.cols[6]
+    options.treatment_sd = data.cols[7]
+    options.control_n = data.cols[2]
+    options.treatment_n = data.cols[3]
+    options.polarity = data.cols[1]
+    output, _, _ = do_effect_calculations(data, options, 4)
+
+    print_test_output(output)
+
+
 def calc_ln_response_ratio() -> Tuple[MetaWinData, list]:
     data, _ = import_test_data("gur_hed.txt")
     options = EffectSizeOptions()
