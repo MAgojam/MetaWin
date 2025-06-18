@@ -114,7 +114,7 @@ def export_config(main_window) -> None:
             outfile.write("filtered col color={}\n".format(main_window.filtered_col_color))
             outfile.write("auto update check={}\n".format(main_window.auto_update_check))
             outfile.write("alpha={}\n".format(main_window.alpha))
-            outfile.write("confidence interval distribution={}".format(main_window.confidence_interval_dist))
+            outfile.write("confidence interval distribution={}\n".format(main_window.confidence_interval_dist))
             outfile.write("color name space={}\n".format(MetaWinCharts.color_name_space))
     except IOError:
         pass
