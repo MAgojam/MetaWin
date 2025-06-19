@@ -259,6 +259,7 @@ class MetaAnalysisDrawForestDialog(QDialog):
         self.style_plain = None
         self.style_scaled = None
         self.style_thick = None
+        self.style_rainforest = None
         self.init_ui(data, last_effect, last_var)
 
     def init_ui(self, data: MetaWinData, last_effect, last_var):
@@ -281,9 +282,11 @@ class MetaAnalysisDrawForestDialog(QDialog):
         self.style_plain = QRadioButton(get_text("Plain"))
         self.style_scaled = QRadioButton(get_text("Scaled Effect Size"))
         self.style_thick = QRadioButton(get_text("Thick"))
+        self.style_rainforest = QRadioButton(get_text("Rainforest"))
         style_layout.addWidget(self.style_plain)
         style_layout.addWidget(self.style_scaled)
         style_layout.addWidget(self.style_thick)
+        style_layout.addWidget(self.style_rainforest)
         style_group_box.setLayout(style_layout)
         self.style_plain.setChecked(True)
         options_layout.addWidget(style_group_box)
@@ -581,8 +584,10 @@ def draw_forest_plot(data, e_data_col, v_data_col, alpha: float = 0.05, fp_style
                 bad_data.append(row.label)
         else:
             filtered.append(row.label)
-
-    return MetaWinCharts.chart_forest_plot("forest plot", e_data_col.label, data_list, alpha, None, fp_style=fp_style)
+    if len(data_list) > 0:
+        return MetaWinCharts.chart_forest_plot("forest plot", e_data_col.label, data_list, alpha, None,
+                                               fp_style=fp_style)
+    return None
 
 
 def draw_forest_dialog(sender, data, last_effect, last_var, alpha: float = 0.05):
@@ -595,6 +600,8 @@ def draw_forest_dialog(sender, data, last_effect, last_var, alpha: float = 0.05)
             fp_style = MetaWinCharts.FP_STYLE_SCALED
         elif sender.draw_dialog.style_thick.isChecked():
             fp_style = MetaWinCharts.FP_STYLE_THICK
+        elif sender.draw_dialog.style_rainforest.isChecked():
+            fp_style = MetaWinCharts.FP_STYLE_RAINFOREST
         else:
             fp_style = MetaWinCharts.FP_STYLE_PLAIN
 
