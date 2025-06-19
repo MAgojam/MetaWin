@@ -245,11 +245,20 @@ def add_chart_marker_style(title, style, options):
     return style_box, label
 
 
-def add_chart_line_edits(color_text, color, width_text, width, style_text, style, line_styles):
-    color_label, color_button, _ = add_chart_color_button(color_text, color)
-    width_label, width_box = add_chart_line_width(width_text, width)
-    style_label, style_box = add_chart_line_style(style_text, style, line_styles)
-    return color_label, color_button, width_label, width_box, style_label, style_box
+def add_chart_line_edits(color_text, color, width_text, width, style_text, style, line_styles,
+                         single_width: bool = True, min_text: str = "", min_width=1, max_text: str = "", max_width=10):
+    color_button, color_label, _ = add_chart_color_button(color_text, color)
+    if single_width:
+        width_box, width_label = add_chart_line_width(width_text, width)
+        min_width_box, min_width_label = None, None
+        max_width_box, max_width_label = None, None
+    else:
+        width_box, width_label = None, None
+        min_width_box, min_width_label = add_chart_line_width(min_text, min_width)
+        max_width_box, max_width_label = add_chart_line_width(max_text, max_width)
+    style_box, style_label = add_chart_line_style(style_text, style, line_styles)
+    return (color_button, color_label, width_box, width_label, style_box, style_label, min_width_box,min_width_label,
+            max_width_box, max_width_label)
 
 
 def add_chart_colormap_edits(colormap: str, options, labelstr: str):

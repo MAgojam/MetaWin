@@ -430,6 +430,11 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Within": "Within",
                       "You are running the most current version available":
                           "You are running the most current version available",
+                      "Size": "Size",
+                      "Max Size": "Max Size",
+                      "Min Size": "Min Size",
+                      "Max Width": "Max Width",
+                      "Min Width": "Min Width",
                       }
 
 # TEST_DICTIONARY = {"About Localization": "About Localization",

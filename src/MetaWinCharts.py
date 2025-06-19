@@ -166,6 +166,9 @@ class ScatterData(BaseChartData):
         self.color = "#1f77b4"
         self.edgecolors = "#1f77b4"
         self.size = 36
+        self.single_size = True
+        self.min_size = 1
+        self.max_size = 100
         self.linewidths = 1.5
         self.linestyle = "dotted"
         self.label = ""
@@ -178,6 +181,9 @@ class ScatterData(BaseChartData):
         self.size_box = None
         self.marker_box = None
         self.no_fill_box = None
+        self.min_size_box = None
+        self.max_size_box = None
+        self.weights = None
 
     def export_to_list(self) -> list:
         outlist = ["Scatter Plot Data\n",
@@ -203,21 +209,32 @@ class ScatterData(BaseChartData):
         edit_layout.addWidget(marker_label, 0, 1)
         edit_layout.addWidget(self.marker_box, 1, 1)
 
-        self.size_box, size_label = MetaWinWidgets.add_chart_marker_size("Size", self.size)
-        edit_layout.addWidget(size_label, 0, 2)
-        edit_layout.addWidget(self.size_box, 1, 2)
+        if self.single_size:
+            self.size_box, size_label = MetaWinWidgets.add_chart_marker_size(get_text("Size"), self.size)
+            edit_layout.addWidget(size_label, 0, 2)
+            edit_layout.addWidget(self.size_box, 1, 2)
+            col_adj = 0
+        else:
+            self.min_size_box, min_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Min Size"),
+                                                                                     self.min_size)
+            edit_layout.addWidget(min_size_label, 0, 2)
+            edit_layout.addWidget(self.min_size_box, 1, 2)
+            self.max_size_box, max_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Max Size"),
+                                                                                     self.max_size)
+            edit_layout.addWidget(max_size_label, 0, 3)
+            edit_layout.addWidget(self.max_size_box, 1, 3)
+            col_adj = 1
 
-        (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
-                                                                                get_text("Edge Width"), self.linewidths,
-                                                                                get_text("Edge Style"), self.linestyle,
-                                                                                LINE_STYLES)
-        edit_layout.addWidget(edgecolor_label, 0, 3)
-        edit_layout.addWidget(self.edgecolor_button, 1, 3)
-        edit_layout.addWidget(width_label, 0, 4)
-        edit_layout.addWidget(self.linewidth_box, 1, 4)
-        edit_layout.addWidget(style_label, 0, 5)
-        edit_layout.addWidget(self.linestyle_box, 1, 5)
+        (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
+                                                           get_text("Edge Width"), self.linewidths,
+                                                           get_text("Edge Style"), self.linestyle, LINE_STYLES)
+        edit_layout.addWidget(edgecolor_label, 0, 3+col_adj)
+        edit_layout.addWidget(self.edgecolor_button, 1, 3+col_adj)
+        edit_layout.addWidget(width_label, 0, 4+col_adj)
+        edit_layout.addWidget(self.linewidth_box, 1, 4+col_adj)
+        edit_layout.addWidget(style_label, 0, 5+col_adj)
+        edit_layout.addWidget(self.linestyle_box, 1, 5+col_adj)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
@@ -236,7 +253,11 @@ class ScatterData(BaseChartData):
             self.color = "none"
         else:
             self.color = self.color_button.color
-        self.size = float(self.size_box.text())
+        if self.single_size:
+            self.size = float(self.size_box.text())
+        else:
+            self.min_size = float(self.min_size_box.text())
+            self.max_size = float(self.max_size_box.text())
         self.marker = MARKER_STYLES[self.marker_box.currentText()]
 
     def style_text(self) -> str:
@@ -294,14 +315,10 @@ class HistogramData(BaseChartData):
         self.bar_color_button, label, _ = MetaWinWidgets.add_chart_color_button(get_text("Bar Color"), self.color)
         edit_layout.addWidget(label, 0, 0)
         edit_layout.addWidget(self.bar_color_button, 1, 0)
-        (self.edge_color_button, color_label, self.edgewidth_box, width_label,
-         self.edgestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"),
-                                                                                self.edgecolor,
-                                                                                get_text("Edge Width"),
-                                                                                self.linewidth,
-                                                                                get_text("Edge Style"),
-                                                                                self.linestyle,
-                                                                                LINE_STYLES)
+        (self.edge_color_button, color_label, self.edgewidth_box, width_label, self.edgestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolor,
+                                                           get_text("Edge Width"), self.linewidth,
+                                                           get_text("Edge Style"), self.linestyle, LINE_STYLES)
         edit_layout.addWidget(color_label, 0, 1)
         edit_layout.addWidget(self.edge_color_button, 1, 1)
         edit_layout.addWidget(width_label, 0, 2)
@@ -354,11 +371,17 @@ class ForestCIData(BaseChartData):
         self.linestyle = "solid"
         self.color = "#1f77b4"
         self.linewidth = 1.5
+        self.single_width = True
+        self.min_width = 1
+        self.max_width = 10
+        self.weights = None
         self.zorder = 0
         self.edit_panel = None
         self.color_button = None
         self.linestyle_box = None
         self.linewidth_box = None
+        self.min_linewidth_box = None
+        self.max_linewidth_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Forest Plot CI Data\n",
@@ -371,23 +394,41 @@ class ForestCIData(BaseChartData):
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
         (self.color_button, color_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                get_text("Width"), self.linewidth,
-                                                                                get_text("Style"), self.linestyle,
-                                                                                LINE_STYLES)
+         self.linestyle_box, style_label, self.min_linewidth_box, min_width_label, self.max_linewidth_box,
+         max_width_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
+                                                                get_text("Width"), self.linewidth,
+                                                                get_text("Style"), self.linestyle,
+                                                                LINE_STYLES,
+                                                                single_width=self.single_width,
+                                                                min_text=get_text("Min Width"),
+                                                                min_width=self.min_width,
+                                                                max_text=get_text("Max Width"),
+                                                                max_width=self.max_width)
         edit_layout.addWidget(color_label, 0, 0)
         edit_layout.addWidget(self.color_button, 1, 0)
-        edit_layout.addWidget(width_label, 0, 1)
-        edit_layout.addWidget(self.linewidth_box, 1, 1)
-        edit_layout.addWidget(style_label, 0, 2)
-        edit_layout.addWidget(self.linestyle_box, 1, 2)
+        if self.single_width:
+            edit_layout.addWidget(width_label, 0, 1)
+            edit_layout.addWidget(self.linewidth_box, 1, 1)
+            adj = 0
+        else:
+            edit_layout.addWidget(min_width_label, 0, 1)
+            edit_layout.addWidget(self.min_linewidth_box, 1, 1)
+            edit_layout.addWidget(max_width_label, 0, 2)
+            edit_layout.addWidget(self.max_linewidth_box, 1, 2)
+            adj = 1
+        edit_layout.addWidget(style_label, 0, 2+adj)
+        edit_layout.addWidget(self.linestyle_box, 1, 2+adj)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
 
     def update_style(self):
         self.linestyle = self.linestyle_box.currentText()
-        self.linewidth = float(self.linewidth_box.text())
+        if self.single_width:
+            self.linewidth = float(self.linewidth_box.text())
+        else:
+            self.min_width = float(self.min_linewidth_box.text())
+            self.max_width = float(self.max_linewidth_box.text())
         self.color = self.color_button.color
 
 
@@ -428,11 +469,11 @@ class LineData(BaseChartData):
             return self.edit_panel
         else:
             self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-            (self.color_button, color_label, self.linewidth_box, width_label,
-             self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                    get_text("Width"), self.linewidth,
-                                                                                    get_text("Style"), self.linestyle,
-                                                                                    LINE_STYLES)
+            (self.color_button, color_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
+             _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
+                                                               get_text("Width"), self.linewidth,
+                                                               get_text("Style"), self.linestyle,
+                                                               LINE_STYLES)
             edit_layout.addWidget(color_label, 0, 0)
             edit_layout.addWidget(self.color_button, 1, 0)
             edit_layout.addWidget(width_label, 0, 1)
@@ -490,10 +531,10 @@ class ArcData(BaseChartData):
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
         (self.color_button, color_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                get_text("Width"), self.linewidth,
-                                                                                get_text("Style"), self.linestyle,
-                                                                                LINE_STYLES)
+         self.linestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color, get_text("Width"),
+                                                           self.linewidth, get_text("Style"), self.linestyle,
+                                                           LINE_STYLES)
         edit_layout.addWidget(color_label, 0, 0)
         edit_layout.addWidget(self.color_button, 1, 0)
         edit_layout.addWidget(width_label, 0, 1)
@@ -928,7 +969,8 @@ class ChartData:
         return str(self.caption)
 
     def add_scatter(self, name: str, x_data, y_data, marker: Union[str, int] = "o", label="", zorder=0, color="#1f77b4",
-                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid"):
+                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid", fixed_marker_size: bool = True,
+                    min_size=1, max_size=100, weights=None):
         new_scatter = ScatterData()
         new_scatter.name = name
         new_scatter.x = x_data
@@ -941,6 +983,10 @@ class ChartData:
         new_scatter.edgecolors = edgecolors
         new_scatter.linewidths = linewidths
         new_scatter.linestyle = linestyle
+        new_scatter.single_size = fixed_marker_size
+        new_scatter.min_size = min_size
+        new_scatter.max_size = max_size
+        new_scatter.weights = weights
         self.data.append(new_scatter)
         return new_scatter
 
@@ -998,7 +1044,8 @@ class ChartData:
         self.data.append(new_ml)
         return new_ml
 
-    def add_ci(self, name, min_x, max_x, y, zorder=0, color="#1f77b4", linestyle="solid", linewidth=1.5):
+    def add_ci(self, name, min_x, max_x, y, zorder=0, color="#1f77b4", linestyle="solid", linewidth=1.5,
+               fixed_line_width: bool = True, min_width=1, max_width=10, weights=None):
         new_ci = ForestCIData()
         new_ci.name = name
         new_ci.min_x = min_x
@@ -1008,6 +1055,10 @@ class ChartData:
         new_ci.color = color
         new_ci.linestyle = linestyle
         new_ci.linewidth = linewidth
+        new_ci.single_width = fixed_line_width
+        new_ci.min_width = min_width
+        new_ci.max_width = max_width
+        new_ci.weights = weights
         self.data.append(new_ci)
         return new_ci
 
@@ -1087,15 +1138,31 @@ def create_figure(chart_data, figure_canvas):
     for data in chart_data.data:
         if data.visible:
             if isinstance(data, ScatterData):
+                if data.single_size:
+                    marker_size = data.size
+                else:
+                    # calculate new marker sizes from weights
+                    minw, maxw = min(data.weights), max(data.weights)
+                    wrange = maxw - minw
+                    marker_size = [data.min_size + (data.max_size-data.min_size)*(w-minw)/wrange for w in data.weights]
+
                 faxes.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
-                              color=data.color, edgecolors=data.edgecolors, s=data.size, linewidths=data.linewidths,
+                              color=data.color, edgecolors=data.edgecolors, s=marker_size, linewidths=data.linewidths,
                               linestyle=data.linestyle)
             elif isinstance(data, LineData):
                 faxes.plot(data.x_values, data.y_values, linestyle=data.linestyle, color=data.color, zorder=data.zorder,
                            linewidth=data.linewidth)
             elif isinstance(data, ForestCIData):
+                if data.single_width:
+                    line_width = data.linewidth
+                else:
+                    # calculate new line widths from weights
+                    minw, maxw = min(data.weights), max(data.weights)
+                    wrange = maxw - minw
+                    line_width = [data.min_width+(data.max_width-data.min_width)*(w-minw)/wrange for w in data.weights]
+
                 faxes.hlines(data.y, data.min_x, data.max_x, zorder=data.zorder, colors=data.color,
-                             linestyles=data.linestyle, linewidth=data.linewidth)
+                             linestyles=data.linestyle, linewidth=line_width)
             elif isinstance(data, LabelData):
                 faxes.set_yticks([y for y in data.y_pos])
                 faxes.set_yticklabels(data.labels)
@@ -1178,21 +1245,29 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     minw, maxw = min(weights), max(weights)
     wrange = maxw - minw
 
+    min_marker_size = 1
+    max_marker_size = 100
+    linewidth = 1.5
+    min_line_width = 1
+    max_line_width = 10
+    marker = "o"
+    marker_color = "#1f77b4"
+    fixed_marker_size = True
+    fixed_line_width = True
     if fp_style == FP_STYLE_SCALED:
-        size = [1+99*(w - minw)/wrange for w in weights]  # scale between 1 and 100
-        marker = "o"
-        marker_color = "#1f77b4"
-        linewidth = 1.5
+        # scale between min and max marker size
+        size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in weights]
+        # size = [1+99*(w - minw)/wrange for w in weights]  # scale between 1 and 100
+        fixed_marker_size = False
     elif fp_style == FP_STYLE_THICK:
         size = 100
         marker = "|"
         marker_color = "red"
-        linewidth = [1+9*(w - minw)/wrange for w in weights]  # scale between 1 and 10
+        # scale between min and max line widths
+        linewidth = [min_line_width+(max_line_width-min_line_width)*(w - minw)/wrange for w in weights]
+        fixed_line_width = False
     else:
         size = 36
-        marker = "o"
-        marker_color = "#1f77b4"
-        linewidth = 1.5
 
     cis = []
     bs_cis = []
@@ -1210,10 +1285,14 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
 
     chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(n_effects+1),
                                                        color="silver", linestyle="dotted", zorder=1)
-    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth)
+    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth,
+                      fixed_line_width=fixed_line_width, min_width=min_line_width, max_width=max_line_width,
+                      weights=weights)
     chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker=marker, zorder=5,
                                                       label="mean and {:0.0%} CI (t-dist)".format(1-alpha), size=size,
-                                                      color=marker_color)
+                                                      color=marker_color, fixed_marker_size=fixed_marker_size,
+                                                      min_size=min_marker_size, max_size=max_marker_size,
+                                                      weights=weights)
     chart_data.caption.style = fp_style
     if median_data is not None:
         chart_data.caption.medians = chart_data.add_scatter(get_text("Medians"), median_data, y_data, marker="x",
