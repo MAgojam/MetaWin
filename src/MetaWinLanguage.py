@@ -150,6 +150,8 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "forest plot scaled means": " The size of the mean marker is proportional to the study weight.",
                       "forest plot thick": " The height (thickness) of the line indicating the confidence interval is "
                                            "proportional to the study weight, after {}.",
+                      "rainforest plot": " The oblong shapes illustrate the probability density around the mean, "
+                                         "represented by both the shape and color of the raindrop, after {}.",
                       "basic_analysis_forest_plot_extra": " Study and mean effect sizes are indicated by {}, with the "
                                                           "corresponding line the {:0.0%} confidence interval based on "
                                                           "{}.",

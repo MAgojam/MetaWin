@@ -871,9 +871,9 @@ class ForestPlotCaption(ForestPlotBaseCaption):
         elif self.style == FP_STYLE_THICK:
             scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
             cite_text = create_reference_list(["Schild_Voracek_2014"], True)
-        # elif self.style == FP_STYLE_RAINFOREST:
-        #     scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
-        #     cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        elif self.style == FP_STYLE_RAINFOREST:
+            scale_text = get_text("rainforest plot").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
         else:
             scale_text = ""
             cite_text = ""
