@@ -8,6 +8,7 @@ from typing import Optional, Union
 from matplotlib import patches
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from matplotlib.collections import QuadMesh
 # the following import is necessary to force pyinstaller to include these backends for vector output when packaging
 from matplotlib.backends import backend_svg, backend_ps, backend_pgf, backend_pdf
 from matplotlib.colors import XKCD_COLORS, hex2color, CSS4_COLORS
@@ -30,6 +31,7 @@ WEIGHT_N = 2
 FP_STYLE_PLAIN = 0
 FP_STYLE_SCALED = 1
 FP_STYLE_THICK = 2
+FP_STYLE_RAINFOREST = 3
 
 LINE_STYLES = ("solid", "dashed", "dotted", "dashdot")
 # MARKER_STYLES = {"point": ".", "circle": "o", "downward triangle": "v", "upward triangle": "^",
@@ -432,6 +434,159 @@ class ForestCIData(BaseChartData):
         self.color = self.color_button.color
 
 
+class RainforestData(BaseChartData):
+    """
+    an object to contain data for drawing the density diagrams of Rainforest plots
+    """
+    def __init__(self):
+        super().__init__()
+        self.lower_cis = None
+        self.upper_cis = None
+        self.ys = None
+        self.means = None
+        self.vars = None
+        self.weights = None
+
+        # style
+        self.zorder = 0
+        self.colormap = "Blues"
+
+        # self.linestyle = "solid"
+        # self.color = "#1f77b4"
+        # self.linewidth = 1.5
+        # self.single_width = True
+        # self.min_width = 1
+        # self.max_width = 10
+        self.edit_panel = None
+        self.color_button = None
+        self.linestyle_box = None
+        self.linewidth_box = None
+        self.min_linewidth_box = None
+        self.max_linewidth_box = None
+
+        # scatter point style
+        # self.marker = "o"
+        # self.color = "#1f77b4"
+        # self.edgecolors = "#1f77b4"
+        # self.size = 36
+        # self.single_size = True
+        # self.min_size = 1
+        # self.max_size = 100
+        # self.linewidths = 1.5
+        # self.linestyle = "dotted"
+        # self.label = ""
+        # self.zorder = 0
+        # self.edit_panel = None
+        # self.edgecolor_button = None
+        # self.linewidth_box = None
+        # self.linestyle_box = None
+        # self.color_button = None
+        # self.size_box = None
+        # self.marker_box = None
+        # self.no_fill_box = None
+        # self.min_size_box = None
+        # self.max_size_box = None
+        # self.weights = None
+
+    def export_to_list(self) -> list:
+        # outlist = ["Scatter Plot Data\n",
+        #            "Name\t{}\n".format(self.name),
+        #            "x\ty\n"]
+        # for i in range(len(self.x)):
+        #     outlist.append("{}\t{}\n".format(self.x[i], self.y[i]))
+        # return outlist
+        return ""
+
+    def create_edit_panel(self):
+        # self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
+        #
+        # self.color_button, color_label, self.no_fill_box = MetaWinWidgets.add_chart_color_button(get_text("Color"),
+        #                                                                                          self.color,
+        #                                                                                          self.edgecolors)
+        # self.no_fill_box.clicked.connect(self.no_fill_clicked)
+        # self.no_fill_clicked()
+        # edit_layout.addWidget(color_label, 0, 0)
+        # edit_layout.addWidget(self.color_button, 1, 0)
+        # edit_layout.addWidget(self.no_fill_box, 2, 0)
+        # self.marker_box, marker_label = MetaWinWidgets.add_chart_marker_style(get_text("Shape"), self.marker,
+        #                                                                       MARKER_STYLES)
+        # edit_layout.addWidget(marker_label, 0, 1)
+        # edit_layout.addWidget(self.marker_box, 1, 1)
+        #
+        # if self.single_size:
+        #     self.size_box, size_label = MetaWinWidgets.add_chart_marker_size(get_text("Size"), self.size)
+        #     edit_layout.addWidget(size_label, 0, 2)
+        #     edit_layout.addWidget(self.size_box, 1, 2)
+        #     col_adj = 0
+        # else:
+        #     self.min_size_box, min_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Min Size"),
+        #                                                                              self.min_size)
+        #     edit_layout.addWidget(min_size_label, 0, 2)
+        #     edit_layout.addWidget(self.min_size_box, 1, 2)
+        #     self.max_size_box, max_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Max Size"),
+        #                                                                              self.max_size)
+        #     edit_layout.addWidget(max_size_label, 0, 3)
+        #     edit_layout.addWidget(self.max_size_box, 1, 3)
+        #     col_adj = 1
+        #
+        # (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
+        #  _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
+        #                                                    get_text("Edge Width"), self.linewidths,
+        #                                                    get_text("Edge Style"), self.linestyle, LINE_STYLES)
+        # edit_layout.addWidget(edgecolor_label, 0, 3+col_adj)
+        # edit_layout.addWidget(self.edgecolor_button, 1, 3+col_adj)
+        # edit_layout.addWidget(width_label, 0, 4+col_adj)
+        # edit_layout.addWidget(self.linewidth_box, 1, 4+col_adj)
+        # edit_layout.addWidget(style_label, 0, 5+col_adj)
+        # edit_layout.addWidget(self.linestyle_box, 1, 5+col_adj)
+        # for i in range(edit_layout.columnCount()):
+        #     edit_layout.setColumnStretch(i, 1)
+        # return self.edit_panel
+        return None
+
+    # def no_fill_clicked(self):
+    #     if self.no_fill_box.isChecked():
+    #         self.color_button.setEnabled(False)
+    #     else:
+    #         self.color_button.setEnabled(True)
+
+    # def update_style(self):
+    #     self.linestyle = self.linestyle_box.currentText()
+    #     self.linewidths = float(self.linewidth_box.text())
+    #     self.edgecolors = self.edgecolor_button.color
+    #     if self.no_fill_box.isChecked():
+    #         self.color = "none"
+    #     else:
+    #         self.color = self.color_button.color
+    #     if self.single_size:
+    #         self.size = float(self.size_box.text())
+    #     else:
+    #         self.min_size = float(self.min_size_box.text())
+    #         self.max_size = float(self.max_size_box.text())
+    #     self.marker = MARKER_STYLES[self.marker_box.currentText()]
+
+    # def style_text(self) -> str:
+    #     marker_name = list(MARKER_STYLES.keys())[list(MARKER_STYLES.values()).index(self.marker)]
+    #     if marker_name.endswith("s"):
+    #         s = "ses"
+    #     else:
+    #         s = "s"
+    #     if marker_name in UNFILLED_MARKERS:
+    #         if self.color == "none":
+    #             return get_text("nothing (marker is invisible)")
+    #         else:
+    #             return find_color_name(self.color) + " " + marker_name + s
+    #     else:
+    #         if self.color == self.edgecolors:
+    #             return find_color_name(self.color) + " " + marker_name + s
+    #         else:
+    #             if self.color == "none":
+    #                 return get_text("marker_style_open_text").format(marker_name, s, find_color_name(self.edgecolors))
+    #             else:
+    #                 return get_text("marker_style_text").format(find_color_name(self.color), marker_name, s,
+    #                                                             find_color_name(self.edgecolors))
+
+
 class LineData(BaseChartData):
     """
     an object to contain a line with one or more segments
@@ -827,6 +982,9 @@ class ForestPlotCaption(ForestPlotBaseCaption):
         elif self.style == FP_STYLE_THICK:
             scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
             cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        # elif self.style == FP_STYLE_RAINFOREST:
+        #     scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
+        #     cite_text = create_reference_list(["Schild_Voracek_2014"], True)
         else:
             scale_text = ""
             cite_text = ""
@@ -1102,6 +1260,33 @@ class ChartData:
         self.data.append(new_grid)
         return new_grid
 
+    def add_rainforest(self, name: str, mean_data, var_data, y_data, lower_data, upper_data, weight_data, zorder=0,
+                    label="", color="#1f77b4",
+                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid", fixed_marker_size: bool = True,
+                    min_size=1, max_size=100):
+        new_rainforest = RainforestData()
+        new_rainforest.name = name
+        new_rainforest.means = mean_data
+        new_rainforest.vars = var_data
+        new_rainforest.ys = y_data
+        new_rainforest.lower_cis = lower_data
+        new_rainforest.upper_cis = upper_data
+        new_rainforest.weights = weight_data
+        new_rainforest.zorder = zorder
+        # new_scatter.label = label
+        # new_scatter.zorder = zorder
+        # new_scatter.color = color
+        # new_scatter.size = size
+        # new_scatter.edgecolors = edgecolors
+        # new_scatter.linewidths = linewidths
+        # new_scatter.linestyle = linestyle
+        # new_scatter.single_size = fixed_marker_size
+        # new_scatter.min_size = min_size
+        # new_scatter.max_size = max_size
+        # new_scatter.weights = weights
+        self.data.append(new_rainforest)
+        return new_rainforest
+
     def export_to_list(self):
         outlist = ["X-axis label\t{}\n".format(self.x_label),
                    "Y-axis label\t{}\n\n\n".format(self.y_label)]
@@ -1109,6 +1294,49 @@ class ChartData:
             outlist.extend(dat.export_to_list())
             outlist.append("\n\n")
         return outlist
+
+
+def fill_between_cmap(x, y, y0, v, faxes, cmap=None, vmin=None, vmax=None, zorder=0):
+    """
+    code to fill between two horizontal lines using a color map
+
+    this function is heavily modified from mpl_fill_cmap_between found at
+    https://github.com/cristobaltapia/mpl_fill_cmap_between
+    """
+
+    # generate coordinates for quadmesh
+    """
+    duplicate x coordinates so you get x_1 x_1 x_2 x_2 x_3 x_3 etc.
+    create new y coordinates alternating between y and y0, y_1 y0_1 y_2 y0_2 etc
+    """
+    n = x.size
+    coords_x = numpy.empty((2 * n), dtype=x.dtype)
+    coords_y = numpy.empty((2 * y.size), dtype=y.dtype)
+    coords_x[0::2] = x
+    coords_x[1::2] = x
+    coords_y[0::2] = y0
+    coords_y[1::2] = y
+
+    # combine, rearrange, and reshape coordinates
+    coords = numpy.vstack((coords_x, coords_y))
+    coords = coords.T
+    coords = numpy.asarray(coords, numpy.float64).reshape((n, 2, 2))
+
+    # values for the colormap
+    """
+    duplicate values to match the prior duplication of the coordinates
+    """
+    vals = numpy.empty((2 * n))
+    vals[0::2] = v
+    vals[1::2] = v
+
+    collection = QuadMesh(coordinates=coords, shading="gouraud", zorder=zorder)
+    collection.set_array(vals)
+    collection.set_clim(vmin, vmax)
+    collection.set_cmap(cmap)
+    collection.autoscale_None()
+
+    faxes.add_collection(collection)
 
 
 def base_figure(figure_canvas):
@@ -1194,6 +1422,25 @@ def create_figure(chart_data, figure_canvas):
                 cm = faxes.pcolormesh(data.x_values, data.y_values, data.z_values, shading="gouraud",
                                  cmap=data.colormap, zorder=0, vmin=0, vmax=100)
                 figure_canvas.figure.colorbar(cm, ax=faxes, label=data.label_name)
+            elif isinstance(data, RainforestData):
+                minw, maxw = min(data.weights), max(data.weights)
+                wrange = maxw - minw
+                nsteps = 500
+                sf = 2
+                # find max pdf for scaling shading across the rainforest droplets
+                maxadj = 0
+                for i in range(len(data.means)):
+                    wscale = 1+(sf-1)*(data.weights[i] - minw)/wrange  # scale between 1 and scaling factor
+                    x = numpy.linspace(data.lower_cis[i], data.upper_cis[i], nsteps)
+                    yadj = scipy.stats.norm.pdf(x, loc=data.means[i], scale=math.sqrt(data.vars[i]))
+                    maxadj = max(maxadj, max(yadj * wscale))
+                # draw rainforest droplets
+                for i in range(len(data.means)):
+                    wscale = 1+(sf-1)*(data.weights[i] - minw)/wrange  # scale between 1 and scaling factor
+                    x = numpy.linspace(data.lower_cis[i], data.upper_cis[i], nsteps)
+                    yadj = scipy.stats.norm.pdf(x, loc=data.means[i], scale=math.sqrt(data.vars[i]))
+                    fill_between_cmap(x, data.ys[i] + yadj*wscale, data.ys[i] - yadj*wscale, yadj*wscale, faxes,
+                                      cmap=data.colormap, vmax=maxadj, zorder=data.zorder)
 
     if chart_data.suppress_y:
         faxes.spines["left"].set_visible(False)
@@ -1225,12 +1472,14 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         bootstrap = True
 
     n_effects = len(forest_data)
+    y_step = 10
 
-    y_data = [-d.order for d in forest_data]
+    y_data = [-y_step*d.order for d in forest_data]
     ci_y_data = [y for y in y_data for _ in range(2)]
     labels = [d.name for d in forest_data]
 
     mean_data = [d.mean for d in forest_data]
+    var_data = [d.variance for d in forest_data]
     is_data = False
     for d in forest_data:
         if d.median is not None:
@@ -1254,6 +1503,8 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     marker_color = "#1f77b4"
     fixed_marker_size = True
     fixed_line_width = True
+    ci_color = "#1f77b4"
+    no_z = 1
     if fp_style == FP_STYLE_SCALED:
         # scale between min and max marker size
         size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in weights]
@@ -1266,6 +1517,13 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         # scale between min and max line widths
         linewidth = [min_line_width+(max_line_width-min_line_width)*(w - minw)/wrange for w in weights]
         fixed_line_width = False
+    elif fp_style == FP_STYLE_RAINFOREST:
+        size = 200
+        marker = "|"
+        marker_color = "white"
+        linewidth = 1
+        ci_color = "white"
+        no_z = 10
     else:
         size = 36
 
@@ -1283,16 +1541,19 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
             bs_cis.extend([d.lower_bs_ci, d.upper_bs_ci])
             bias_cis.extend([d.lower_bias_ci, d.upper_bias_ci])
 
-    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(n_effects+1),
-                                                       color="silver", linestyle="dotted", zorder=1)
+    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(y_step*(n_effects+1)),
+                                                       color="silver", linestyle="dotted", zorder=no_z)
     chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth,
                       fixed_line_width=fixed_line_width, min_width=min_line_width, max_width=max_line_width,
-                      weights=weights)
+                      weights=weights, color=ci_color)
     chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker=marker, zorder=5,
                                                       label="mean and {:0.0%} CI (t-dist)".format(1-alpha), size=size,
                                                       color=marker_color, fixed_marker_size=fixed_marker_size,
                                                       min_size=min_marker_size, max_size=max_marker_size,
                                                       weights=weights)
+    if fp_style == FP_STYLE_RAINFOREST:
+        chart_data.add_rainforest(get_text(""), mean_data, var_data, y_data, min_cis, max_cis, weights)
+
     chart_data.caption.style = fp_style
     if median_data is not None:
         chart_data.caption.medians = chart_data.add_scatter(get_text("Medians"), median_data, y_data, marker="x",
@@ -1741,7 +2002,7 @@ def chart_stnd_regression(x_name, y_name, x_data, y_data, slope, intercept, mode
 
 def find_color_name(color: str) -> str:
     """
-    Given a color as a hex string, e.g., #0123A5, find the closest named color from the CSS 4 color name list
+    Given a color as a hex string, e.g., #0123A5, find the closest named color from a color name space
     and return that name
     """
     if color_name_space == "X11/CSS4":
