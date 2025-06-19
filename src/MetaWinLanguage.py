@@ -435,7 +435,8 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Min Size": "Min Size",
                       "Max Width": "Max Width",
                       "Min Width": "Min Width",
-                      "Rainforest": "Rainforest"
+                      "Rainforest": "Rainforest",
+                      "PDF Raindrops": "PDF Raindrops"
                       }
 
 # TEST_DICTIONARY = {"About Localization": "About Localization",

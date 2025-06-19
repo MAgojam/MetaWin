@@ -451,140 +451,29 @@ class RainforestData(BaseChartData):
         self.zorder = 0
         self.colormap = "Blues"
 
-        # self.linestyle = "solid"
-        # self.color = "#1f77b4"
-        # self.linewidth = 1.5
-        # self.single_width = True
-        # self.min_width = 1
-        # self.max_width = 10
         self.edit_panel = None
-        self.color_button = None
-        self.linestyle_box = None
-        self.linewidth_box = None
-        self.min_linewidth_box = None
-        self.max_linewidth_box = None
-
-        # scatter point style
-        # self.marker = "o"
-        # self.color = "#1f77b4"
-        # self.edgecolors = "#1f77b4"
-        # self.size = 36
-        # self.single_size = True
-        # self.min_size = 1
-        # self.max_size = 100
-        # self.linewidths = 1.5
-        # self.linestyle = "dotted"
-        # self.label = ""
-        # self.zorder = 0
-        # self.edit_panel = None
-        # self.edgecolor_button = None
-        # self.linewidth_box = None
-        # self.linestyle_box = None
-        # self.color_button = None
-        # self.size_box = None
-        # self.marker_box = None
-        # self.no_fill_box = None
-        # self.min_size_box = None
-        # self.max_size_box = None
-        # self.weights = None
+        self.map_box = None
+        self.rev_map_box = None
 
     def export_to_list(self) -> list:
-        # outlist = ["Scatter Plot Data\n",
-        #            "Name\t{}\n".format(self.name),
-        #            "x\ty\n"]
-        # for i in range(len(self.x)):
-        #     outlist.append("{}\t{}\n".format(self.x[i], self.y[i]))
-        # return outlist
-        return ""
+        return []
 
     def create_edit_panel(self):
-        # self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-        #
-        # self.color_button, color_label, self.no_fill_box = MetaWinWidgets.add_chart_color_button(get_text("Color"),
-        #                                                                                          self.color,
-        #                                                                                          self.edgecolors)
-        # self.no_fill_box.clicked.connect(self.no_fill_clicked)
-        # self.no_fill_clicked()
-        # edit_layout.addWidget(color_label, 0, 0)
-        # edit_layout.addWidget(self.color_button, 1, 0)
-        # edit_layout.addWidget(self.no_fill_box, 2, 0)
-        # self.marker_box, marker_label = MetaWinWidgets.add_chart_marker_style(get_text("Shape"), self.marker,
-        #                                                                       MARKER_STYLES)
-        # edit_layout.addWidget(marker_label, 0, 1)
-        # edit_layout.addWidget(self.marker_box, 1, 1)
-        #
-        # if self.single_size:
-        #     self.size_box, size_label = MetaWinWidgets.add_chart_marker_size(get_text("Size"), self.size)
-        #     edit_layout.addWidget(size_label, 0, 2)
-        #     edit_layout.addWidget(self.size_box, 1, 2)
-        #     col_adj = 0
-        # else:
-        #     self.min_size_box, min_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Min Size"),
-        #                                                                              self.min_size)
-        #     edit_layout.addWidget(min_size_label, 0, 2)
-        #     edit_layout.addWidget(self.min_size_box, 1, 2)
-        #     self.max_size_box, max_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Max Size"),
-        #                                                                              self.max_size)
-        #     edit_layout.addWidget(max_size_label, 0, 3)
-        #     edit_layout.addWidget(self.max_size_box, 1, 3)
-        #     col_adj = 1
-        #
-        # (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
-        #  _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
-        #                                                    get_text("Edge Width"), self.linewidths,
-        #                                                    get_text("Edge Style"), self.linestyle, LINE_STYLES)
-        # edit_layout.addWidget(edgecolor_label, 0, 3+col_adj)
-        # edit_layout.addWidget(self.edgecolor_button, 1, 3+col_adj)
-        # edit_layout.addWidget(width_label, 0, 4+col_adj)
-        # edit_layout.addWidget(self.linewidth_box, 1, 4+col_adj)
-        # edit_layout.addWidget(style_label, 0, 5+col_adj)
-        # edit_layout.addWidget(self.linestyle_box, 1, 5+col_adj)
-        # for i in range(edit_layout.columnCount()):
-        #     edit_layout.setColumnStretch(i, 1)
-        # return self.edit_panel
-        return None
+        self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
+        self.map_box, self.rev_map_box, _, _ = MetaWinWidgets.add_chart_colormap_edits(self.colormap, COLORMAPS)
+        edit_layout.addWidget(self.rev_map_box, 0, 0)
+        edit_layout.addWidget(self.map_box, 1, 0)
+        for i in range(edit_layout.columnCount()):
+            edit_layout.setColumnStretch(i, 1)
+        return self.edit_panel
 
-    # def no_fill_clicked(self):
-    #     if self.no_fill_box.isChecked():
-    #         self.color_button.setEnabled(False)
-    #     else:
-    #         self.color_button.setEnabled(True)
+    def update_style(self):
+        self.colormap = COLORMAPS[self.map_box.currentText()]
+        if self.rev_map_box.isChecked():
+            self.colormap += "_r"
 
-    # def update_style(self):
-    #     self.linestyle = self.linestyle_box.currentText()
-    #     self.linewidths = float(self.linewidth_box.text())
-    #     self.edgecolors = self.edgecolor_button.color
-    #     if self.no_fill_box.isChecked():
-    #         self.color = "none"
-    #     else:
-    #         self.color = self.color_button.color
-    #     if self.single_size:
-    #         self.size = float(self.size_box.text())
-    #     else:
-    #         self.min_size = float(self.min_size_box.text())
-    #         self.max_size = float(self.max_size_box.text())
-    #     self.marker = MARKER_STYLES[self.marker_box.currentText()]
-
-    # def style_text(self) -> str:
-    #     marker_name = list(MARKER_STYLES.keys())[list(MARKER_STYLES.values()).index(self.marker)]
-    #     if marker_name.endswith("s"):
-    #         s = "ses"
-    #     else:
-    #         s = "s"
-    #     if marker_name in UNFILLED_MARKERS:
-    #         if self.color == "none":
-    #             return get_text("nothing (marker is invisible)")
-    #         else:
-    #             return find_color_name(self.color) + " " + marker_name + s
-    #     else:
-    #         if self.color == self.edgecolors:
-    #             return find_color_name(self.color) + " " + marker_name + s
-    #         else:
-    #             if self.color == "none":
-    #                 return get_text("marker_style_open_text").format(marker_name, s, find_color_name(self.edgecolors))
-    #             else:
-    #                 return get_text("marker_style_text").format(find_color_name(self.color), marker_name, s,
-    #                                                             find_color_name(self.edgecolors))
+    def style_text(self) -> str:
+        return ""
 
 
 class LineData(BaseChartData):
@@ -1260,10 +1149,7 @@ class ChartData:
         self.data.append(new_grid)
         return new_grid
 
-    def add_rainforest(self, name: str, mean_data, var_data, y_data, lower_data, upper_data, weight_data, zorder=0,
-                    label="", color="#1f77b4",
-                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid", fixed_marker_size: bool = True,
-                    min_size=1, max_size=100):
+    def add_rainforest(self, name: str, mean_data, var_data, y_data, lower_data, upper_data, weight_data, zorder=0):
         new_rainforest = RainforestData()
         new_rainforest.name = name
         new_rainforest.means = mean_data
@@ -1273,17 +1159,6 @@ class ChartData:
         new_rainforest.upper_cis = upper_data
         new_rainforest.weights = weight_data
         new_rainforest.zorder = zorder
-        # new_scatter.label = label
-        # new_scatter.zorder = zorder
-        # new_scatter.color = color
-        # new_scatter.size = size
-        # new_scatter.edgecolors = edgecolors
-        # new_scatter.linewidths = linewidths
-        # new_scatter.linestyle = linestyle
-        # new_scatter.single_size = fixed_marker_size
-        # new_scatter.min_size = min_size
-        # new_scatter.max_size = max_size
-        # new_scatter.weights = weights
         self.data.append(new_rainforest)
         return new_rainforest
 
@@ -1298,9 +1173,9 @@ class ChartData:
 
 def fill_between_cmap(x, y, y0, v, faxes, cmap=None, vmin=None, vmax=None, zorder=0):
     """
-    code to fill between two horizontal lines using a color map
+    code to fill between two horizontal lines using a color map as one moves horizontally
 
-    this function is heavily modified from mpl_fill_cmap_between found at
+    this function is heavily modified from code found at
     https://github.com/cristobaltapia/mpl_fill_cmap_between
     """
 
@@ -1508,7 +1383,6 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     if fp_style == FP_STYLE_SCALED:
         # scale between min and max marker size
         size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in weights]
-        # size = [1+99*(w - minw)/wrange for w in weights]  # scale between 1 and 100
         fixed_marker_size = False
     elif fp_style == FP_STYLE_THICK:
         size = 100
@@ -1552,7 +1426,7 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
                                                       min_size=min_marker_size, max_size=max_marker_size,
                                                       weights=weights)
     if fp_style == FP_STYLE_RAINFOREST:
-        chart_data.add_rainforest(get_text(""), mean_data, var_data, y_data, min_cis, max_cis, weights)
+        chart_data.add_rainforest(get_text("PDF Raindrops"), mean_data, var_data, y_data, min_cis, max_cis, weights)
 
     chart_data.caption.style = fp_style
     if median_data is not None:

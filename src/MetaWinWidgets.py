@@ -261,7 +261,7 @@ def add_chart_line_edits(color_text, color, width_text, width, style_text, style
             max_width_box, max_width_label)
 
 
-def add_chart_colormap_edits(colormap: str, options, labelstr: str):
+def add_chart_colormap_edits(colormap: str, options, labelstr: str = "", inc_label: bool = True):
     rev_map_box = QCheckBox(get_text("Reverse"))
     if colormap.endswith("_r"):
         rev_map_box.setChecked(True)
@@ -274,9 +274,13 @@ def add_chart_colormap_edits(colormap: str, options, labelstr: str):
     index = list(options.values()).index(colormap)
     map_box.setCurrentIndex(index)
 
-    label = QLabel(get_text("Color Scheme Label"))
-    label_box = QLineEdit()
-    label_box.setText(labelstr)
+    if inc_label:
+        label = QLabel(get_text("Color Scheme Label"))
+        label_box = QLineEdit()
+        label_box.setText(labelstr)
+    else:
+        label = None
+        label_box = None
 
     return map_box, rev_map_box, label, label_box
 
