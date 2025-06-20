@@ -9,7 +9,7 @@ from collections import namedtuple
 
 mean_data_tuple = namedtuple("mean_data_tuple", ["name", "order", "n", "mean", "median", "variance", "avg_var",
                                                  "lower_ci", "upper_ci", "lower_bs_ci", "upper_bs_ci", "lower_bias_ci",
-                                                 "upper_bias_ci"])
+                                                 "upper_bias_ci", "bootstrapped_means"])
 
 MAJOR_VERSION = 3
 MINOR_VERSION = 0

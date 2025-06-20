@@ -579,7 +579,8 @@ def draw_forest_plot(data, e_data_col, v_data_col, alpha: float = 0.05, fp_style
             if (e is not None) and (v is not None) and (v > 0):
                 y += 1
                 tmp_lower, tmp_upper = scipy.stats.norm.interval(confidence=1 - alpha, loc=e, scale=math.sqrt(v))
-                data_list.append(mean_data_tuple(row.label, y, 0, e, None, v, 0, tmp_lower, tmp_upper, 0, 0, 0, 0))
+                data_list.append(mean_data_tuple(row.label, y, 0, e, None, v, 0, tmp_lower, tmp_upper, 0, 0, 0, 0,
+                                                 None))
             else:
                 bad_data.append(row.label)
         else:

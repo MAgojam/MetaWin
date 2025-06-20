@@ -361,8 +361,8 @@ def bootstrap_means(bootstrap_n, boot_data, obs_mean, pooled_var, random_effects
         lower_bias_ci = all_means[lower_bias_index]
         upper_bias_ci = all_means[upper_bias_index]
     else:
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = None, None, None, None
-    return lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci
+        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, all_means = None, None, None, None, None
+    return lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, all_means
 
 
 def calc_i2(qt, n, alpha: float = 0.05):
@@ -632,14 +632,14 @@ def simple_meta_analysis(data, options, decimal_places: int = 4, alpha: float = 
                                                        options.bootstrap_mean)
         else:
             progress_bar = None
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
-                                                                                 mean_e, pooled_var,
-                                                                                 options.random_effects, alpha,
-                                                                                 progress_bar=progress_bar)
+        (lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci,
+         bs_means) = bootstrap_means(options.bootstrap_mean, boot_data, mean_e, pooled_var,
+                                         options.random_effects, alpha, progress_bar=progress_bar)
 
         plot_order = 0
         mean_data = mean_data_tuple(get_text("Mean"), plot_order, n, mean_e, median_e, var_e, mean_v,
-                                    lower_ci, upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                    lower_ci, upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci,
+                                    bs_means)
         het_data = heterogeneity_test_tuple(get_text("Total"), qt, df, p, None)
         i2, i2_lower, i2_upper = calc_i2(qt, n, alpha)
         i2_data = [i2_values(get_text("Total"), i2, i2_lower, i2_upper)]
@@ -652,14 +652,14 @@ def simple_meta_analysis(data, options, decimal_places: int = 4, alpha: float = 
             # individual study data has to use normal dist
             tmp_lower, tmp_upper = scipy.stats.norm.interval(confidence=1-alpha, loc=e_data[i],
                                                              scale=math.sqrt(v_data[i]))
-            study_data = mean_data_tuple(study_names[i], plot_order, 0, e_data[i], None, 0, 0, tmp_lower, tmp_upper,
-                                         None, None, None, None)
+            study_data = mean_data_tuple(study_names[i], plot_order, 0, e_data[i], None, v_data[i], 0, tmp_lower,
+                                         tmp_upper, None, None, None, None, None)
             forest_data.append(study_data)
             plot_order += 1
 
         # recreate without label
         mean_data = mean_data_tuple("", plot_order, n, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci, lower_bs_ci,
-                                    upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                    upper_bs_ci, lower_bias_ci, upper_bias_ci, bs_means)
         # output
         new_cites = create_global_output(output_blocks, effect_sizes.label, mean_data, het_data, pooled_var, i2_data,
                                          options.bootstrap_mean, decimal_places, alpha, options.log_transformed)
@@ -806,7 +806,7 @@ def grouped_meta_analysis(data, options, decimal_places: int = 4, alpha: float =
                 group_lower, group_upper = scipy.stats.t.interval(confidence=1 - alpha, df=group_df, loc=group_mean,
                                                                   scale=math.sqrt(group_var))
             (group_lower_bs, group_upper_bs,
-             group_lower_bias, group_upper_bias) = bootstrap_means(options.bootstrap_mean, group_boot,
+             group_lower_bias, group_upper_bias, _) = bootstrap_means(options.bootstrap_mean, group_boot,
                                                                    group_mean, pooled_var, options.random_effects,
                                                                    alpha, progress_bar=progress_bar)
             group_het_values.append(heterogeneity_test_tuple(group + " (within)", group_qw, group_df, group_p, ""))
@@ -816,7 +816,7 @@ def grouped_meta_analysis(data, options, decimal_places: int = 4, alpha: float =
 
             group_mean_values.append(mean_data_tuple(group, chart_order, group_n, group_mean, group_median, group_var,
                                                      0, group_lower, group_upper, group_lower_bs, group_upper_bs,
-                                                     group_lower_bias, group_upper_bias))
+                                                     group_lower_bias, group_upper_bias, None))
             chart_order += 1
 
         mean_v = numpy.sum(v_data) / n
@@ -825,13 +825,13 @@ def grouped_meta_analysis(data, options, decimal_places: int = 4, alpha: float =
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1 - alpha, df=n-1, loc=mean_e,
                                                         scale=math.sqrt(var_e))
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
+        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, boot_data,
                                                                                  mean_e, pooled_var,
                                                                                  options.random_effects, alpha,
                                                                                  progress_bar=progress_bar)
 
         global_mean_data = mean_data_tuple(get_text("Global"), 0, n, mean_e, median_e, var_e, mean_v, lower_ci,
-                                           upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                           upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
 
         forest_data = [global_mean_data]
         forest_data.extend(group_mean_values)
@@ -994,12 +994,12 @@ def cumulative_meta_analysis(data, options, decimal_places: int = 4, alpha: floa
             else:
                 lower_ci, upper_ci = scipy.stats.t.interval(confidence=1-alpha, df=df, loc=mean_e,
                                                             scale=math.sqrt(var_e))
-            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, tmp_boot,
+            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, tmp_boot,
                                                                                      mean_e, pooled_var,
                                                                                      options.random_effects, alpha,
                                                                                      progress_bar=progress_bar)
             mean_data = mean_data_tuple(ns_label, chart_order, ns, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci,
-                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
             cumulative_means.append(mean_data)
             het_data = heterogeneity_test_tuple("{} Qtotal".format(ns_label), qt, df, p, None)
             cumulative_het.append(het_data)
@@ -1122,13 +1122,13 @@ def regression_meta_analysis(data, options, decimal_places: int = 4, alpha: floa
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1 - alpha, df=n-1, loc=mean_e,
                                                         scale=math.sqrt(var_e))
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
+        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, boot_data,
                                                                                  mean_e, pooled_var,
                                                                                  options.random_effects, alpha,
                                                                                  progress_bar=progress_bar)
 
         mean_data = mean_data_tuple(get_text("Global"), 0, n, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci,
-                                    lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                    lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
 
         pqt = 1 - scipy.stats.chi2.cdf(qt, df=n-1)
         pqe = 1 - scipy.stats.chi2.cdf(qe, df=n-2)
@@ -1393,12 +1393,12 @@ def complex_meta_analysis(data, options, decimal_places: int = 4, alpha: float =
             else:
                 lower_ci, upper_ci = scipy.stats.t.interval(confidence=1 - alpha, df=df, loc=mean_e,
                                                             scale=math.sqrt(var_e))
-            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
+            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, boot_data,
                                                                                      mean_e, pooled_var,
                                                                                      options.random_effects, alpha,
                                                                                      progress_bar=progress_bar)
             mean_data = mean_data_tuple(get_text("Global"), 0, n, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci,
-                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
 
             i2, i2_lower, i2_upper = calc_i2(qt, n, alpha)
             i2_data = [i2_values(get_text("Total"), i2, i2_lower, i2_upper)]
@@ -1560,7 +1560,7 @@ class NestedGroup:
             group_lower, group_upper = scipy.stats.t.interval(confidence=1 - alpha, df=group_df, loc=self.mean,
                                                               scale=math.sqrt(group_var))
         (group_lower_bs, group_upper_bs,
-         group_lower_bias, group_upper_bias) = bootstrap_means(bootstrap_mean, group_boot, self.mean,
+         group_lower_bias, group_upper_bias, _) = bootstrap_means(bootstrap_mean, group_boot, self.mean,
                                                                0, False, alpha, progress_bar=progress_bar)
         if self.index > 0:
             indent = "  " + "→ "*self.index
@@ -1569,7 +1569,7 @@ class NestedGroup:
         het_output.append(heterogeneity_test_tuple(indent + self.name + " (within)", self.qw, group_df, group_p, ""))
         mean_output.append(mean_data_tuple(indent + self.name, chart_order, group_n, self.mean, group_median, group_var,
                                            0, group_lower, group_upper, group_lower_bs, group_upper_bs,
-                                           group_lower_bias, group_upper_bias))
+                                           group_lower_bias, group_upper_bias, None))
         for child in self.children:
             child_het, child_mean, chart_order = child.group_calculations(e, w, chart_order, boot_data,
                                                                           bootstrap_mean, alpha,
@@ -1707,11 +1707,11 @@ def nested_meta_analysis(data, options, decimal_places: int = 4, alpha: float = 
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1 - alpha, df=n-1, loc=mean_e,
                                                         scale=math.sqrt(var_e))
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
+        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, boot_data,
                                                                                  mean_e, 0, False, alpha,
                                                                                  progress_bar=progress_bar)
         global_mean_data = mean_data_tuple(get_text("Global"), 0, n, mean_e, median_e, var_e, mean_v, lower_ci,
-                                           upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                           upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
         df = n-1
         pqt = 1 - scipy.stats.chi2.cdf(qt, df=df)
         global_het_data = heterogeneity_test_tuple(get_text("Total"), qt, df, pqt, "")
@@ -2234,7 +2234,7 @@ def phylogenetic_meta_analysis(data, options, tree, decimal_places: int = 4, alp
                 lower_ci, upper_ci = scipy.stats.t.interval(confidence=1 - alpha, df=df, loc=mean_e,
                                                             scale=math.sqrt(var_e))
                 mean_data = mean_data_tuple(get_text("Global"), 0, n, mean_e, None, var_e, mean_v, lower_ci, upper_ci,
-                                            0, 0, 0, 0)
+                                            0, 0, 0, 0, None)
 
                 i2, i2_lower, i2_upper = calc_i2(qt, n, alpha)
                 i2_data = [i2_values(get_text("Total"), i2, i2_lower, i2_upper)]
@@ -2320,13 +2320,13 @@ def jackknife_meta_analysis(data, options, decimal_places: int = 4, alpha: float
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1-alpha, df=df, loc=mean_e, scale=math.sqrt(var_e))
 
-        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, boot_data,
+        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, boot_data,
                                                                                  mean_e, pooled_var,
                                                                                  options.random_effects, alpha,
                                                                                  progress_bar=progress_bar)
         plot_order = 0
         mean_data = mean_data_tuple(get_text("Mean"), plot_order, n, mean_e, median_e, var_e, mean_v, lower_ci,
-                                    upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                    upper_ci, lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
         global_het_data = heterogeneity_test_tuple(get_text("Total"), qt, df, p, None)
         i2, i2_lower, i2_upper = calc_i2(qt, n, alpha)
         i2_data = [i2_values(get_text("Total"), i2, i2_lower, i2_upper)]
@@ -2336,7 +2336,7 @@ def jackknife_meta_analysis(data, options, decimal_places: int = 4, alpha: float
         plot_order += 2
         forest_data = [mean_data]
         global_mean_data = mean_data_tuple("", plot_order, n, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci,
-                                           lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                           lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
 
         # do jackknife
         jackknife_means = []
@@ -2364,12 +2364,12 @@ def jackknife_meta_analysis(data, options, decimal_places: int = 4, alpha: float
             else:
                 lower_ci, upper_ci = scipy.stats.t.interval(confidence=1-alpha, df=df, loc=mean_e,
                                                             scale=math.sqrt(var_e))
-            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci = bootstrap_means(options.bootstrap_mean, tmp_boot,
+            lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, _ = bootstrap_means(options.bootstrap_mean, tmp_boot,
                                                                                      mean_e, pooled_var,
                                                                                      options.random_effects, alpha,
                                                                                      progress_bar=progress_bar)
             mean_data = mean_data_tuple(j_label, plot_order, n-1, mean_e, median_e, var_e, mean_v, lower_ci, upper_ci,
-                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci)
+                                        lower_bs_ci, upper_bs_ci, lower_bias_ci, upper_bias_ci, None)
             jackknife_means.append(mean_data)
             het_data = heterogeneity_test_tuple("{} Qtotal".format(j_label), qt, df, p, None)
             jackknife_het.append(het_data)

@@ -1659,39 +1659,6 @@ def meta_analysis(sender, data, last_effect, last_var, decimal_places: int = 4, 
         else:
             meta_analysis_options.structure = None
 
-        # if meta_analysis_options.structure == SIMPLE_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisSimpleStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisSimpleStructureExtraDialog()
-        # elif meta_analysis_options.structure == GROUPED_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisGroupedStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisGroupStructureExtraDialog()
-        # elif meta_analysis_options.structure == CUMULATIVE_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisCumulativeStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisCumulativeStructureExtraDialog()
-        # elif meta_analysis_options.structure == NESTED_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisNestedStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisNestedStructureExtraDialog()
-        # elif meta_analysis_options.structure == REGRESSION_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisLinearStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisLinearStructureExtraDialog()
-        # elif meta_analysis_options.structure == COMPLEX_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisComplexStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisComplexStructureExtraDialog()
-        # # elif meta_analysis_options.structure == TRIM_FILL:
-        # #     sender.meta_analysis_structure_dialog = MetaAnalysisTrimFillDialog(data, last_effect, last_var)
-        # #     sender.meta_analysis_extra_dialog = None
-        # elif meta_analysis_options.structure == PHYLOGENETIC_MA:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisPhylogeneticStructureDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisPhylogeneticStructureExtraDialog()
-        # elif meta_analysis_options.structure == JACKKNIFE:
-        #     sender.meta_analysis_structure_dialog = MetaAnalysisJackknifeDialog(data, last_effect, last_var)
-        #     sender.meta_analysis_extra_dialog = MetaAnalysisJackknifeExtraDialog()
-        # # elif meta_analysis_options.structure == RANKCOR:
-        # #     sender.meta_analysis_structure_dialog = MetaAnalysisRankCorrelationDialog(data, last_effect, last_var)
-        # #     sender.meta_analysis_extra_dialog = None
-        # else:
-        #     meta_analysis_options.structure = None
-
         if meta_analysis_options.structure is not None:
             if sender.meta_analysis_structure_dialog.exec():
                 sender.meta_analysis_structure_dialog.set_options(meta_analysis_options)
