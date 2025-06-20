@@ -32,6 +32,7 @@ FP_STYLE_PLAIN = 0
 FP_STYLE_SCALED = 1
 FP_STYLE_THICK = 2
 FP_STYLE_RAINFOREST = 3
+FOREST_STEP = 10
 
 LINE_STYLES = ("solid", "dashed", "dotted", "dashdot")
 # MARKER_STYLES = {"point": ".", "circle": "o", "downward triangle": "v", "upward triangle": "^",
@@ -1366,8 +1367,9 @@ def create_figure(chart_data, figure_canvas):
             elif isinstance(data, ViolinData):
                 for i, d in enumerate(data.bootstrap_data):
                     if d is not None:
-                        parts = faxes.violinplot(d, [data.ys[i]], points=1000, orientation="horizontal", widths=20,
-                                                 showmeans=False, showmedians=False, showextrema=False)
+                        parts = faxes.violinplot(d, [data.ys[i]], points=1000, orientation="horizontal",
+                                                 widths=FOREST_STEP-1, showmeans=False, showmedians=False,
+                                                 showextrema=False)
                         for pc in parts["bodies"]:
                             pc.set_color(data.color)
                             pc.set_alpha(data.alpha)
@@ -1402,9 +1404,9 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         bootstrap = True
 
     n_effects = len(forest_data)
-    y_step = 10
+    # y_step = 10
 
-    y_data = [-y_step*d.order for d in forest_data]
+    y_data = [-FOREST_STEP*d.order for d in forest_data]
     ci_y_data = [y for y in y_data for _ in range(2)]
     labels = [d.name for d in forest_data]
 
@@ -1472,8 +1474,9 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
             bias_cis.extend([d.lower_bias_ci, d.upper_bias_ci])
             bs_values.append(d.bootstrapped_means)
 
-    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(y_step*(n_effects+1)),
-                                                       color="silver", linestyle="dotted", zorder=no_z)
+    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0,
+                                                       -(FOREST_STEP*(n_effects+1)), color="silver",
+                                                       linestyle="dotted", zorder=no_z)
     chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth,
                       fixed_line_width=fixed_line_width, min_width=min_line_width, max_width=max_line_width,
                       weights=weights, color=ci_color)
@@ -1500,7 +1503,7 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
                                                          bias_cis, ci_y_data, marker=7, zorder=4, color="#d62728",
                                                          label="{:0.0%} CI (bias-corrected bootstrap)".format(1-alpha))
         chart_data.caption.boot_violin = chart_data.add_violin(get_text("Bootstrap Distribution"), bs_values,
-                                                               ci_y_data)
+                                                               y_data)
 
     return chart_data
 
