@@ -31,8 +31,10 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Bootstrap Mean Effect Size(s)": "Bootstrap Mean Effect Size(s)",
                       "bootstrap_caption": " Confidence intervals from a boostrap ({:,} iterations) procedure, "
                                            "following {}, are indicated by {}; the bias-corrected bootstrap interval "
-                                           "is indicated by {}.",
+                                           "is indicated by {}; and the full distribution of the bootstrapped "
+                                           "values are indicated by the {} raindrop.",
                       "Bootstrap Confidence Limits": "Bootstrap Confidence Limits",
+                      "Bootstrap Distribution": "Bootstrap Distribution",
                       "Bias-corrected Bootstrap Confidence Limits": "Bias-corrected Bootstrap Confidence Limits",
                       "Calculate Effect Sizes": "Calculate Effect Sizes",
                       "Cancel": "Cancel",

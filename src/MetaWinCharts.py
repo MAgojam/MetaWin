@@ -476,6 +476,41 @@ class RainforestData(BaseChartData):
         return ""
 
 
+class ViolinData(BaseChartData):
+    """
+    an object to contain data for drawing bootstrap distributions
+    """
+    def __init__(self):
+        super().__init__()
+        self.bootstrap_data = None
+        self.ys = None
+
+        # style
+        self.color = "#FFDF00"
+        self.alpha = 1
+        self.edit_panel = None
+        self.color_button = None
+
+    def export_to_list(self) -> list:
+        return []
+
+    def create_edit_panel(self):
+        self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
+        self.color_button, color_label, _ = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color)
+
+        edit_layout.addWidget(color_label, 0, 0)
+        edit_layout.addWidget(self.color_button, 1, 0)
+        for i in range(edit_layout.columnCount()):
+            edit_layout.setColumnStretch(i, 1)
+        return self.edit_panel
+
+    def update_style(self):
+        self.color = self.color_button.color
+
+    def style_text(self) -> str:
+        return find_color_name(self.color)
+
+
 class LineData(BaseChartData):
     """
     an object to contain a line with one or more segments
@@ -830,6 +865,7 @@ class ForestPlotBaseCaption:
         self.medians = None
         self.boot = None
         self.bias = None
+        self.boot_violin = None
         self.style = FP_STYLE_PLAIN
 
     def base_forest_plot_caption(self) -> str:
@@ -857,9 +893,10 @@ class ForestPlotBaseCaption:
             text += get_text("forest_plot_median_caption").format(self.medians.style_text())
         if self.bootstrap_n is not None:
             citation = "Adams_et_1997"
-            text += get_text("bootstrap_caption").format(self.bootstrap_n, get_citation(citation),
-                                                         self.boot.style_text(), self.bias.style_text()) + \
-                    create_reference_list([citation], True)
+            text += (get_text("bootstrap_caption").format(self.bootstrap_n, get_citation(citation),
+                                                         self.boot.style_text(), self.bias.style_text(),
+                                                         self.boot_violin.style_text()) +
+                     create_reference_list([citation], True))
         return text
 
 
@@ -1162,6 +1199,16 @@ class ChartData:
         self.data.append(new_rainforest)
         return new_rainforest
 
+    def add_violin(self, name, bs_data, ys, color: str = "#FFDF00", alpha=1):
+        new_violin = ViolinData()
+        new_violin.name = name
+        new_violin.bootstrap_data = bs_data
+        new_violin.ys = ys
+        new_violin.color = color
+        new_violin.alpha = alpha
+        self.data.append(new_violin)
+        return new_violin
+
     def export_to_list(self):
         outlist = ["X-axis label\t{}\n".format(self.x_label),
                    "Y-axis label\t{}\n\n\n".format(self.y_label)]
@@ -1316,6 +1363,14 @@ def create_figure(chart_data, figure_canvas):
                     yadj = scipy.stats.norm.pdf(x, loc=data.means[i], scale=math.sqrt(data.vars[i]))
                     fill_between_cmap(x, data.ys[i] + yadj*wscale, data.ys[i] - yadj*wscale, yadj*wscale, faxes,
                                       cmap=data.colormap, vmax=maxadj, zorder=data.zorder)
+            elif isinstance(data, ViolinData):
+                for i, d in enumerate(data.bootstrap_data):
+                    if d is not None:
+                        parts = faxes.violinplot(d, [data.ys[i]], points=1000, orientation="horizontal", widths=20,
+                                                 showmeans=False, showmedians=False, showextrema=False)
+                        for pc in parts["bodies"]:
+                            pc.set_color(data.color)
+                            pc.set_alpha(data.alpha)
 
     if chart_data.suppress_y:
         faxes.spines["left"].set_visible(False)
@@ -1404,6 +1459,7 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     cis = []
     bs_cis = []
     bias_cis = []
+    bs_values = []
     for d in forest_data:
         cis.extend([d.lower_ci, d.upper_ci])
     min_cis = [d.lower_ci for d in forest_data]
@@ -1414,6 +1470,7 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         for i, d in enumerate(forest_data):
             bs_cis.extend([d.lower_bs_ci, d.upper_bs_ci])
             bias_cis.extend([d.lower_bias_ci, d.upper_bias_ci])
+            bs_values.append(d.bootstrapped_means)
 
     chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(y_step*(n_effects+1)),
                                                        color="silver", linestyle="dotted", zorder=no_z)
@@ -1442,6 +1499,8 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         chart_data.caption.bias = chart_data.add_scatter(get_text("Bias-corrected Bootstrap Confidence Limits"),
                                                          bias_cis, ci_y_data, marker=7, zorder=4, color="#d62728",
                                                          label="{:0.0%} CI (bias-corrected bootstrap)".format(1-alpha))
+        chart_data.caption.boot_violin = chart_data.add_violin(get_text("Bootstrap Distribution"), bs_values,
+                                                               ci_y_data)
 
     return chart_data
 
