@@ -116,6 +116,11 @@ help_index = {
     "jackknife_analysis": resource_path(doc_path + "metawin_help.html#jackknife_analysis", True),
     "linear_analysis": resource_path(doc_path + "metawin_help.html#linear_analysis", True),
     "localization": resource_path(doc_path + "metawin_help.html#localization", True),
+
+
+    "marc_plot": resource_path(doc_path + "metawin_help.html#forest_plot", True),
+
+
     "metacalc": resource_path(doc_path + "metacalc_help.html", True),
     "metawin": resource_path(doc_path + "metawin_help.html", True),
     "nested_analysis": resource_path(doc_path + "metawin_help.html#nested_analysis", True),
@@ -137,6 +142,10 @@ references = {
     "Adams_et_1997": ["Adams, D.C., J. Gurevitch, and M.S. Rosenberg (1997) Resampling tests for meta-analysis of "
                       "ecological data. <em>Ecology</em> 78:1277&ndash;1283.", "Adams <em>et al.</em> (1997)",
                       "10.1890/0012-9658(1997)078[1277:RTFMAO]2.0.CO;2"],
+
+    "Barrowman_Myers_2003": ["Barrowman, N.J., and R.A. Myers (2003) Raindrop plots: A new way to display collections "
+                             "of likelihoods and distributions. <em>American Statistician</em> "
+                             "57(4):268&ndash;274.", "Barrowman and Myers (2003)", "10.1198/0003130032369"],
 
     "Begg_1994": ["Begg, C.B. (1994) Publication bias. Pp. 399-409 in <em>The Handbook of Research Synthesis</em>, "
                   "H. Cooper and L.V. Hedges, eds. Sage, New York.", "Begg (1994)", ""],

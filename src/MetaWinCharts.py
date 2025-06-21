@@ -3,12 +3,14 @@ Module for creating figures using the matplotlib backend for Qt
 """
 
 import math
+from numbers import Number
 from typing import Optional, Union
 
 from matplotlib import patches
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from matplotlib.collections import QuadMesh
+from matplotlib.lines import Line2D
 # the following import is necessary to force pyinstaller to include these backends for vector output when packaging
 from matplotlib.backends import backend_svg, backend_ps, backend_pgf, backend_pdf
 from matplotlib.colors import XKCD_COLORS, hex2color, CSS4_COLORS
@@ -167,6 +169,7 @@ class ScatterData(BaseChartData):
         # scatter point style
         self.marker = "o"
         self.color = "#1f77b4"
+        self.alpha = 1
         self.edgecolors = "#1f77b4"
         self.size = 36
         self.single_size = True
@@ -175,6 +178,7 @@ class ScatterData(BaseChartData):
         self.linewidths = 1.5
         self.linestyle = "dotted"
         self.label = ""
+        self.alpha = 1
         self.zorder = 0
         self.edit_panel = None
         self.edgecolor_button = None
@@ -186,7 +190,9 @@ class ScatterData(BaseChartData):
         self.no_fill_box = None
         self.min_size_box = None
         self.max_size_box = None
+        self.opacity_box = None
         self.weights = None
+        self.max_weight, self.min_weight = 0, 0
 
     def export_to_list(self) -> list:
         outlist = ["Scatter Plot Data\n",
@@ -199,9 +205,9 @@ class ScatterData(BaseChartData):
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
 
-        self.color_button, color_label, self.no_fill_box = MetaWinWidgets.add_chart_color_button(get_text("Color"),
-                                                                                                 self.color,
-                                                                                                 self.edgecolors)
+        (self.color_button, color_label, self.no_fill_box, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, self.edgecolors,
+                                                                self.alpha)
         self.no_fill_box.clicked.connect(self.no_fill_clicked)
         self.no_fill_clicked()
         edit_layout.addWidget(color_label, 0, 0)
@@ -228,16 +234,18 @@ class ScatterData(BaseChartData):
             edit_layout.addWidget(self.max_size_box, 1, 3)
             col_adj = 1
 
+        edit_layout.addWidget(opacity_label, 0, 3+col_adj)
+        edit_layout.addWidget(self.opacity_box, 1, 3+col_adj)
         (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
          _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
                                                            get_text("Edge Width"), self.linewidths,
                                                            get_text("Edge Style"), self.linestyle, LINE_STYLES)
-        edit_layout.addWidget(edgecolor_label, 0, 3+col_adj)
-        edit_layout.addWidget(self.edgecolor_button, 1, 3+col_adj)
-        edit_layout.addWidget(width_label, 0, 4+col_adj)
-        edit_layout.addWidget(self.linewidth_box, 1, 4+col_adj)
-        edit_layout.addWidget(style_label, 0, 5+col_adj)
-        edit_layout.addWidget(self.linestyle_box, 1, 5+col_adj)
+        edit_layout.addWidget(edgecolor_label, 0, 4+col_adj)
+        edit_layout.addWidget(self.edgecolor_button, 1, 4+col_adj)
+        edit_layout.addWidget(width_label, 0, 5+col_adj)
+        edit_layout.addWidget(self.linewidth_box, 1, 5+col_adj)
+        edit_layout.addWidget(style_label, 0, 6+col_adj)
+        edit_layout.addWidget(self.linestyle_box, 1, 6+col_adj)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
@@ -261,6 +269,7 @@ class ScatterData(BaseChartData):
         else:
             self.min_size = float(self.min_size_box.text())
             self.max_size = float(self.max_size_box.text())
+        self.alpha = float(self.opacity_box.text())
         self.marker = MARKER_STYLES[self.marker_box.currentText()]
 
     def style_text(self) -> str:
@@ -298,12 +307,14 @@ class HistogramData(BaseChartData):
         self.linewidth = 1
         self.linestyle = "solid"
         self.edgecolor = "black"
+        self.alpha = 1
         # style editing
         self.edit_panel = None
         self.edgewidth_box = None
         self.edgestyle_box = None
         self.bar_color_button = None
         self.edge_color_button = None
+        self.opacity_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Histogram Data\n",
@@ -315,7 +326,8 @@ class HistogramData(BaseChartData):
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-        self.bar_color_button, label, _ = MetaWinWidgets.add_chart_color_button(get_text("Bar Color"), self.color)
+        (self.bar_color_button, label, _, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Bar Color"), self.color, alpha=self.alpha)
         edit_layout.addWidget(label, 0, 0)
         edit_layout.addWidget(self.bar_color_button, 1, 0)
         (self.edge_color_button, color_label, self.edgewidth_box, width_label, self.edgestyle_box, style_label,
@@ -328,6 +340,8 @@ class HistogramData(BaseChartData):
         edit_layout.addWidget(self.edgewidth_box, 1, 2)
         edit_layout.addWidget(style_label, 0, 3)
         edit_layout.addWidget(self.edgestyle_box, 1, 3)
+        edit_layout.addWidget(opacity_label, 0, 4)
+        edit_layout.addWidget(self.opacity_box, 1, 4)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
@@ -337,6 +351,7 @@ class HistogramData(BaseChartData):
         self.linewidth = float(self.edgewidth_box.text())
         self.color = self.bar_color_button.color
         self.edgecolor = self.edge_color_button.color
+        self.alpha = float(self.opacity_box.text())
 
 
 class LabelData(BaseChartData):
@@ -491,22 +506,27 @@ class ViolinData(BaseChartData):
         self.alpha = 1
         self.edit_panel = None
         self.color_button = None
+        self.opacity_box = None
 
     def export_to_list(self) -> list:
         return []
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-        self.color_button, color_label, _ = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color)
+        (self.color_button, color_label, _, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, alpha=self.alpha)
 
         edit_layout.addWidget(color_label, 0, 0)
         edit_layout.addWidget(self.color_button, 1, 0)
+        edit_layout.addWidget(opacity_label, 0, 1)
+        edit_layout.addWidget(self.opacity_box, 1, 1)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
 
     def update_style(self):
         self.color = self.color_button.color
+        self.alpha = float(self.opacity_box.text())
 
     def style_text(self) -> str:
         return find_color_name(self.color)
@@ -640,6 +660,9 @@ class AnnotationData(BaseChartData):
         self.annotations = []
         self.x = None
         self.y = None
+        self.halignment = "left"
+        self.valignment = "baseline"
+        self.bbox = None
         self.edit_panel = None
 
     def export_to_list(self) -> list:
@@ -649,6 +672,25 @@ class AnnotationData(BaseChartData):
         for i in range(len(self.annotations)):
             outlist.append("{}\t{}\t{}\n".format(self.x[i], self.y[i], self.annotations[i]))
         return outlist
+
+    def create_edit_panel(self):
+        return self.edit_panel
+
+
+class MARCLegendData(BaseChartData):
+    """
+    an object to contain the legend for MARC plots
+    """
+    def __init__(self):
+        super().__init__()
+        self.legend_scale = None
+        self.legend_weights = (0.1, 0.01, 0.001)        # fixed values
+        self.legend_formats = ("0.1f", "0.2f", "0.3f")  # fixed values
+        self.scatter = None
+        self.edit_panel = None
+
+    def export_to_list(self) -> list:
+        return ""
 
     def create_edit_panel(self):
         return self.edit_panel
@@ -669,6 +711,7 @@ class FillDataX(BaseChartData):
         self.zorder = 0
         self.alpha = 0.5
         self.color_button = None
+        self.opacity_box = None
         self.linked_style = None
         self.is_linked = False
 
@@ -677,12 +720,6 @@ class FillDataX(BaseChartData):
         other_fill.is_linked = True
 
     def export_to_list(self) -> list:
-        # outlist = ["Line Data\n",
-        #            "Name\t{}\n".format(self.name),
-        #            "x\ty\n"]
-        # for i in range(len(self.x_values)):
-        #     outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
-        # return outlist
         return []
 
     def create_edit_panel(self):
@@ -690,16 +727,20 @@ class FillDataX(BaseChartData):
             return self.edit_panel
         else:
             self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-            self.color_button, color_label, _ = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color)
+            (self.color_button, color_label, _, self.opacity_box,
+             opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, alpha=self.alpha)
 
             edit_layout.addWidget(color_label, 0, 0)
             edit_layout.addWidget(self.color_button, 1, 0)
+            edit_layout.addWidget(opacity_label, 0, 1)
+            edit_layout.addWidget(self.opacity_box, 1, 1)
             for i in range(edit_layout.columnCount()):
                 edit_layout.setColumnStretch(i, 1)
             return self.edit_panel
 
     def update_style(self):
         self.color = self.color_button.color
+        self.alpha = float(self.opacity_box.text())
         if self.linked_style is not None:
             self.linked_style.color = self.color
             self.linked_style.visible = self.visible
@@ -965,6 +1006,19 @@ class JackknifeAnalysisCaption(ForestPlotBaseCaption):
                self.extra_forest_plot_caption()
 
 
+class MARCPlotCaption:
+    def __init__(self):
+        self.e_label = ""
+        self.alpha = 0.05
+        self.style = 1
+        self.means = None
+        self.no_effect = None
+
+    def __str__(self):
+        return ""
+
+
+
 class FunnelPlotCaption:
     def __init__(self):
         self.x_label = ""
@@ -1017,6 +1071,7 @@ class ChartData:
         # special adjustments
         self.suppress_y = False
         self.rescale_x = None
+        self.rescale_y = None
         self.invert_y = False
         # caption
         if caption_type == "normal quantile":
@@ -1045,6 +1100,8 @@ class ChartData:
             self.caption = JackknifeAnalysisCaption()
         elif caption_type == "forest plot":
             self.caption = ForestPlotCaption()
+        elif caption_type == "marc plot":
+            self.caption = MARCPlotCaption()
         elif caption_type == "funnel plot":
             self.caption = FunnelPlotCaption()
         else:
@@ -1054,8 +1111,8 @@ class ChartData:
         return str(self.caption)
 
     def add_scatter(self, name: str, x_data, y_data, marker: Union[str, int] = "o", label="", zorder=0, color="#1f77b4",
-                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid", fixed_marker_size: bool = True,
-                    min_size=1, max_size=100, weights=None):
+                    edgecolors="#1f77b4", size: Union[list, Number] = 36, linewidths=1.5, linestyle="solid",
+                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight=0, min_weight=0):
         new_scatter = ScatterData()
         new_scatter.name = name
         new_scatter.x = x_data
@@ -1072,6 +1129,8 @@ class ChartData:
         new_scatter.min_size = min_size
         new_scatter.max_size = max_size
         new_scatter.weights = weights
+        new_scatter.max_weight = max_weight
+        new_scatter.min_weight = min_weight
         self.data.append(new_scatter)
         return new_scatter
 
@@ -1155,14 +1214,34 @@ class ChartData:
         self.data.append(new_labels)
         return new_labels
 
-    def add_annotations(self, name, annotations, x_data, y_data):
+    def add_annotations(self, name, annotations, x_data, y_data, halignment: str = "left",valignment: str = "baseline",
+                        bbox=None):
         new_annotation = AnnotationData()
         new_annotation.name = name
         new_annotation.x = x_data
         new_annotation.y = y_data
+        # new_annotation.end_x = end_x_data
+        # new_annotation.end_y = end_y_data
         new_annotation.annotations = annotations
+        new_annotation.halignment = halignment
+        new_annotation.valignment = valignment
+        new_annotation.bbox = bbox
+        # new_annotation.arrowprops = arrowprops
+        # new_annotation.xycoords = xycoords
         self.data.append(new_annotation)
         return new_annotation
+
+    # def add_marc_legend(self, name, legend_weights, legend_scale, legend_formats, scatter):
+    def add_marc_legend(self, name: str, scatter: ScatterData) -> MARCLegendData:
+        new_legend = MARCLegendData()
+        new_legend.name = name
+        # new_legend.legend_weights = legend_weights
+        # new_legend.legend_scale = legend_scale
+        # new_legend.legend_formats = legend_formats
+        new_legend.scatter = scatter
+        self.data.append(new_legend)
+        return new_legend
+
 
     def add_fill_area_x(self, name, x1, x2, y, zorder=0, color="red", alpha=0.5):
         new_fill = FillDataX()
@@ -1268,6 +1347,7 @@ def base_figure(figure_canvas):
     """
     # figure_canvas = FIGURE_CANVAS
     figure_canvas.figure.clf()  # clean any existing figures
+    figure_canvas.figure.set_layout_engine("none")
     faxes = figure_canvas.figure.subplots()
     faxes.spines["right"].set_visible(False)
     faxes.spines["top"].set_visible(False)
@@ -1293,13 +1373,14 @@ def create_figure(chart_data, figure_canvas):
                     marker_size = data.size
                 else:
                     # calculate new marker sizes from weights
-                    minw, maxw = min(data.weights), max(data.weights)
+                    minw, maxw = data.min_weight, data.max_weight
+                    # minw, maxw = min(data.weights), max(data.weights)
                     wrange = maxw - minw
                     marker_size = [data.min_size + (data.max_size-data.min_size)*(w-minw)/wrange for w in data.weights]
 
                 faxes.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
                               color=data.color, edgecolors=data.edgecolors, s=marker_size, linewidths=data.linewidths,
-                              linestyle=data.linestyle)
+                              linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, LineData):
                 faxes.plot(data.x_values, data.y_values, linestyle=data.linestyle, color=data.color, zorder=data.zorder,
                            linewidth=data.linewidth)
@@ -1325,23 +1406,41 @@ def create_figure(chart_data, figure_canvas):
                 faxes.add_patch(arc)
             elif isinstance(data, AnnotationData):
                 for i in range(len(data.annotations)):
-                    faxes.annotate(data.annotations[i], (data.x[i], data.y[i]))
+                    faxes.annotate(data.annotations[i], (data.x[i], data.y[i]), ha=data.halignment, va=data.valignment,
+                                       bbox=data.bbox)
+            elif isinstance(data, MARCLegendData):
+                # calculate new marker sizes
+                sc = data.scatter
+                minw, maxw = sc.min_weight, sc.max_weight
+                wrange = maxw - minw
+                legend_size = [math.sqrt(sc.min_size + (sc.max_size - sc.min_size)*(w-minw)/wrange)
+                               for w in data.legend_weights]
+
+                legend_elements = []
+                for i, s in enumerate(data.legend_weights):
+                    legend_elements.append(Line2D([0], [0], marker="o", color="None",
+                                                  label=format(s, data.legend_formats[i]),
+                                                  markerfacecolor=sc.color, markeredgecolor="None",
+                                                  markersize=legend_size[i]))
+                # legend_artist = figure_canvas.figure.legend(handles=legend_elements, loc="outside right center", borderpad=1, labelspacing=1,
+                #                              title="Relative Weight")
+                # figure_canvas.figure.set_layout_engine("constrained")
+                legend_artist = faxes.legend(handles=legend_elements, loc="center left", borderpad=1, labelspacing=1,
+                                             title="Relative Weight")
+
+                # add arrows around legend
+                faxes.annotate("More certain", (0.5, 1), (0.5, 1.5), xycoords=legend_artist,
+                               ha="center", va="center", arrowprops=dict(facecolor="black", arrowstyle="<-"))
+                faxes.annotate("Less certain", (0.5, 0), (0.5, -0.5), xycoords=legend_artist,
+                               ha="center", va="center", arrowprops=dict(facecolor="black", arrowstyle="<-"))
+
             elif isinstance(data, HistogramData):
                 faxes.hist(data.bins[:-1], data.bins, weights=data.counts, edgecolor=data.edgecolor, color=data.color,
-                           linewidth=data.linewidth, linestyle=data.linestyle)
+                           linewidth=data.linewidth, linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, FillDataX):
                 faxes.fill_betweenx(data.y_values, data.x1_values, data.x2_values, color=data.color,
-                                    edgecolor="none", zorder=data.zorder,
-                                    alpha=data.alpha)
+                                    edgecolor="none", zorder=data.zorder, alpha=data.alpha)
             elif isinstance(data, ColorGrid):
-                # ax2 = faxes.twinx()
-                # max_z = numpy.max(data.z_values)
-                # min_z = numpy.min(data.z_values)
-                # ax2.set_ylim(min_z, max_z)
-                # if chart_data.invert_y:
-                #     ax2.invert_yaxis()
-                # faxes.set_zorder(ax2.get_zorder()+1)
-                # faxes.set_frame_on(False)
                 cm = faxes.pcolormesh(data.x_values, data.y_values, data.z_values, shading="gouraud",
                                  cmap=data.colormap, zorder=0, vmin=0, vmax=100)
                 figure_canvas.figure.colorbar(cm, ax=faxes, label=data.label_name)
@@ -1378,6 +1477,8 @@ def create_figure(chart_data, figure_canvas):
         faxes.spines["left"].set_visible(False)
     if chart_data.rescale_x is not None:
         faxes.set_xlim(chart_data.rescale_x[0], chart_data.rescale_x[1])
+    if chart_data.rescale_y is not None:
+        faxes.set_ylim(chart_data.rescale_y[0], chart_data.rescale_y[1])
     if chart_data.invert_y:
         faxes.invert_yaxis()
 
@@ -1484,7 +1585,7 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
                                                       label="mean and {:0.0%} CI (t-dist)".format(1-alpha), size=size,
                                                       color=marker_color, fixed_marker_size=fixed_marker_size,
                                                       min_size=min_marker_size, max_size=max_marker_size,
-                                                      weights=weights)
+                                                      weights=weights, max_weight=maxw, min_weight=minw)
     if fp_style == FP_STYLE_RAINFOREST:
         chart_data.add_rainforest(get_text("PDF Raindrops"), mean_data, var_data, y_data, min_cis, max_cis, weights)
 
@@ -1506,6 +1607,83 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
                                                                y_data)
 
     return chart_data
+
+
+
+
+
+def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0.05, marc_style: int = 0) -> ChartData:
+    chart_data = ChartData(analysis_type)
+    chart_data.caption.e_label = effect_name
+    chart_data.caption.alpha = alpha
+    chart_data.caption.style = marc_style
+
+    chart_data.x_label = effect_name
+    chart_data.y_label = get_text("Relative Weight")
+
+    # n_effects = len(forest_data)
+
+    # y_data = [-FOREST_STEP*d.order for d in forest_data]
+    # ci_y_data = [y for y in y_data for _ in range(2)]
+    # labels = [d.name for d in forest_data]
+    #
+    mean_data = [d.mean for d in marc_data]
+    max_x = max(numpy.abs(mean_data))*1.1  # set x-limits to 10% more than largest value in either direction
+    chart_data.rescale_x = [-max_x, max_x]
+
+    # var_data = [d.variance for d in marc_data]
+    raw_weights = [1/d.variance for d in marc_data]  # get weights
+    total_weights = sum(raw_weights)
+    rel_weights = [w/total_weights for w in raw_weights]
+    minw, maxw = min(rel_weights), max(rel_weights)
+
+    if maxw < 0.1:
+        maxw = 0.1
+    minw = 0
+
+    wrange = maxw - minw
+    min_marker_size = 1
+    max_marker_size = 400
+    size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in rel_weights]
+    max_y = maxw*1.1
+    min_y = -wrange/10
+    chart_data.rescale_y = [min_y, max_y]  # set scale for y-axis
+
+    chart_data.caption.no_effect = chart_data.add_line(get_text("Lines of No Effect and Weight"), 0, min_y, 0, max_y,
+                                                       color="darkgray", linestyle="solid", zorder=2)
+    base_line = chart_data.add_line("", -max_x, 0, max_x, 0, color="darkgray", linestyle="solid", zorder=2)
+    chart_data.caption.no_effect.link_style(base_line)
+
+    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, rel_weights, marker="o", zorder=5,
+                                                      label="mean", size=size, fixed_marker_size=False,
+                                                      min_size=min_marker_size, max_size=max_marker_size,
+                                                      weights=rel_weights, max_weight=maxw, min_weight=minw)
+    chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [min_y, max_y], color="red", alpha=0.25, zorder=1)
+    chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [min_y, max_y], color="blue", alpha=0.25, zorder=1)
+
+
+    # annotations
+    chart_data.add_annotations("", [get_text("Negative Effect"), get_text("Positive Effect")],
+                               [-max_x/2, max_x/2], [min_y/2, min_y/2], halignment="center", valignment="center",
+                               bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="darkgray", lw=2))
+    chart_data.add_marc_legend("", chart_data.caption.means)
+
+    return chart_data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def add_regression_to_chart(x_name: str, y_name: str, x_data, y_data, slope: float, intercept: float,
