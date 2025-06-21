@@ -198,7 +198,7 @@ def add_figure_edit_panel(sender):
 
 
 # --- widgets for graph editing --- #
-def add_chart_color_button(title, color, def_color="black"):
+def add_chart_color_button(title, color, def_color="black", alpha=1):
     label = QLabel(title)
     no_color_box = QCheckBox(get_text("No fill color"))
     if color == "none":
@@ -207,7 +207,8 @@ def add_chart_color_button(title, color, def_color="black"):
     else:
         no_color_box.setChecked(False)
         button = ColorButton(color)
-    return button, label, no_color_box
+    opacity_box, opacity_label = add_chart_opacity(get_text("Opacity"), alpha)
+    return button, label, no_color_box, opacity_box, opacity_label
 
 
 def add_chart_line_width(title, linewidth):
@@ -245,9 +246,17 @@ def add_chart_marker_style(title, style, options):
     return style_box, label
 
 
+def add_chart_opacity(title, alpha):
+    label = QLabel(title)
+    alpha_box = QLineEdit()
+    alpha_box.setText(str(alpha))
+    alpha_box.setValidator(QDoubleValidator(0, 1, 2))
+    return alpha_box, label
+
+
 def add_chart_line_edits(color_text, color, width_text, width, style_text, style, line_styles,
                          single_width: bool = True, min_text: str = "", min_width=1, max_text: str = "", max_width=10):
-    color_button, color_label, _ = add_chart_color_button(color_text, color)
+    color_button, color_label, _, _, _ = add_chart_color_button(color_text, color)
     if single_width:
         width_box, width_label = add_chart_line_width(width_text, width)
         min_width_box, min_width_label = None, None
