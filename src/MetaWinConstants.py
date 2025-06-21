@@ -69,6 +69,7 @@ scatter_icon = resource_path(icon_path + "draw-points@256px.png")
 histogram_icon = resource_path(icon_path + "charts-filled@256px.png")
 radial_plot_icon = resource_path(icon_path + "draw-radial-plot@256px.png")
 forest_plot_icon = resource_path(icon_path + "chart-forest-plot@256px.png")
+marc_plot_icon = resource_path(icon_path + "custom-draw-marc@256px.png")
 normal_quantile_icon = resource_path(icon_path + "letter-z-2@256px.png")
 norm_dist_icon = resource_path(icon_path + "letter-z-2@256px.png")
 t_dist_icon = resource_path(icon_path + "letter-t@256px.png")
@@ -116,11 +117,7 @@ help_index = {
     "jackknife_analysis": resource_path(doc_path + "metawin_help.html#jackknife_analysis", True),
     "linear_analysis": resource_path(doc_path + "metawin_help.html#linear_analysis", True),
     "localization": resource_path(doc_path + "metawin_help.html#localization", True),
-
-
-    "marc_plot": resource_path(doc_path + "metawin_help.html#forest_plot", True),
-
-
+    "marc_plot": resource_path(doc_path + "metawin_help.html#marc_plot", True),
     "metacalc": resource_path(doc_path + "metacalc_help.html", True),
     "metawin": resource_path(doc_path + "metawin_help.html", True),
     "nested_analysis": resource_path(doc_path + "metawin_help.html#nested_analysis", True),

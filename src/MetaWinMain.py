@@ -141,16 +141,9 @@ class MainWindow(QMainWindow):
         draw_forest_action = QAction(QIcon(MetaWinConstants.forest_plot_icon), get_text("Forest Plot"), self)
         draw_forest_action.triggered.connect(self.draw_forest_plot)
         draw_menu.addAction(draw_forest_action)
-
-
-
-        draw_marc_action = QAction(QIcon(MetaWinConstants.forest_plot_icon), get_text("MARC Plot"), self)
+        draw_marc_action = QAction(QIcon(MetaWinConstants.marc_plot_icon), get_text("MARC Plot"), self)
         draw_marc_action.triggered.connect(self.draw_marc_plot)
         draw_menu.addAction(draw_marc_action)
-
-
-
-
         draw_normal_quantile_action = QAction(QIcon(MetaWinConstants.normal_quantile_icon),
                                               get_text("Normal Quantile Plot"), self)
         draw_normal_quantile_action.triggered.connect(self.draw_normal_quantile_plot)
