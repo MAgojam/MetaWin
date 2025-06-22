@@ -291,7 +291,6 @@ class MetaAnalysisDrawForestDialog(QDialog):
         self.style_plain.setChecked(True)
         options_layout.addWidget(style_group_box)
 
-
         main_frame = QFrame()
         main_frame.setFrameShape(QFrame.Shape.Panel)
         main_frame.setFrameShadow(QFrame.Shadow.Sunken)
@@ -310,8 +309,6 @@ class MetaAnalysisDrawForestDialog(QDialog):
         webbrowser.open(self.help)
 
 
-
-
 class MetaAnalysisDrawMARCDialog(QDialog):
     def __init__(self, data: MetaWinData, last_effect, last_var):
         super().__init__()
@@ -325,7 +322,7 @@ class MetaAnalysisDrawMARCDialog(QDialog):
     def init_ui(self, data: MetaWinData, last_effect, last_var):
         button_layout, _ = add_ok_cancel_help_button_layout(self)
 
-        draw_label = QLabel(get_text("MARC Plot"))
+        draw_label = QLabel(get_text("Meta Analytic Rain Cloud Plot"))
         draw_label.setStyleSheet(MetaWinConstants.title_label_style)
 
         effect_size_label, variance_label = add_effect_choice_to_dialog(self, data, last_effect, last_var,
@@ -336,21 +333,6 @@ class MetaAnalysisDrawMARCDialog(QDialog):
         options_layout.addWidget(self.effect_size_box)
         options_layout.addWidget(variance_label)
         options_layout.addWidget(self.variance_box)
-
-        # style_group_box = QGroupBox(get_text("MARC Plot Style"))
-        # style_layout = QVBoxLayout()
-        # self.style_plain = QRadioButton(get_text("Plain"))
-        # self.style_scaled = QRadioButton(get_text("Scaled Effect Size"))
-        # self.style_thick = QRadioButton(get_text("Thick"))
-        # self.style_rainforest = QRadioButton(get_text("Rainforest"))
-        # style_layout.addWidget(self.style_plain)
-        # style_layout.addWidget(self.style_scaled)
-        # style_layout.addWidget(self.style_thick)
-        # style_layout.addWidget(self.style_rainforest)
-        # style_group_box.setLayout(style_layout)
-        # self.style_plain.setChecked(True)
-        # options_layout.addWidget(style_group_box)
-
 
         main_frame = QFrame()
         main_frame.setFrameShape(QFrame.Shape.Panel)
@@ -364,12 +346,10 @@ class MetaAnalysisDrawMARCDialog(QDialog):
 
         self.setLayout(main_layout)
         self.setWindowIcon(QIcon(MetaWinConstants.metawin_icon))
-        self.setWindowTitle(get_text("MARC Plot"))
+        self.setWindowTitle(get_text("Meta Analytic Rain Cloud Plot"))
 
     def show_help(self):
         webbrowser.open(self.help)
-
-
 
 
 class MetaAnalysisEditFigure(QDialog):
@@ -676,12 +656,7 @@ def draw_forest_dialog(sender, data, last_effect, last_var, alpha: float = 0.05)
     return None
 
 
-
-
-
-
-
-def draw_marc_plot(data, e_data_col, v_data_col, alpha: float = 0.05, marc_style: int = 0):
+def draw_marc_plot(data, e_data_col, v_data_col, alpha: float = 0.05, marc_style: int = MetaWinCharts.MARC_STYLE_0):
     bad_data = []
     filtered = []
     y = 0
@@ -709,25 +684,12 @@ def draw_marc_dialog(sender, data, last_effect, last_var, alpha: float = 0.05):
     if sender.draw_dialog.exec():
         e_data_col = sender.draw_dialog.columns[sender.draw_dialog.effect_size_box.currentIndex()]
         v_data_col = sender.draw_dialog.columns[sender.draw_dialog.variance_box.currentIndex()]
-
-        # if sender.draw_dialog.style_scaled.isChecked():
-        #     fp_style = MetaWinCharts.FP_STYLE_SCALED
-        # elif sender.draw_dialog.style_thick.isChecked():
-        #     fp_style = MetaWinCharts.FP_STYLE_THICK
-        # elif sender.draw_dialog.style_rainforest.isChecked():
-        #     fp_style = MetaWinCharts.FP_STYLE_RAINFOREST
-        # else:
-        #     fp_style = MetaWinCharts.FP_STYLE_PLAIN
-
         chart_data = draw_marc_plot(data, e_data_col, v_data_col, alpha)
         if chart_data is not None:
             return chart_data
         else:
             MetaWinMessages.report_critical(sender, "Error", "No valid data found for given options.")
     return None
-
-
-
 
 
 def edit_figure(sender, chart_data):

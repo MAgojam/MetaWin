@@ -670,8 +670,13 @@ def simple_meta_analysis(data, options, decimal_places: int = 4, alpha: float = 
         citations.extend(new_cites)
 
         if options.create_graph:
-            chart_data = MetaWinCharts.chart_forest_plot("basic analysis", effect_sizes.label, forest_data,
-                                                         alpha, options.bootstrap_mean, normal_ci=norm_ci)
+            if options.graph_style < 10:
+                chart_data = MetaWinCharts.chart_forest_plot("basic analysis", effect_sizes.label, forest_data,
+                                                             alpha, options.bootstrap_mean, normal_ci=norm_ci,
+                                                             fp_style=options.graph_style)
+            else:
+                chart_data = MetaWinCharts.chart_marc_plot("marc plot", effect_sizes.label, forest_data, alpha,
+                                                           marc_style=options.graph_style)
 
     else:
         output_blocks.append([get_text("Fewer than two studies were valid for analysis")])

@@ -6,6 +6,7 @@ import math
 from numbers import Number
 from typing import Optional, Union
 
+import matplotlib.patches
 from matplotlib import patches
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
@@ -35,6 +36,9 @@ FP_STYLE_SCALED = 1
 FP_STYLE_THICK = 2
 FP_STYLE_RAINFOREST = 3
 FOREST_STEP = 10
+MARC_STYLE_0 = 10  # this is for plotting studies only, without the mean
+MARC_STYLE_1 = 11  # version 1, when the mean is included in y-axis scaling (i.e., y-axis ranges from 0 to 1)
+MARC_STYLE_2 = 12  # version 2, when the mean is excluded from y-axis scaling
 
 LINE_STYLES = ("solid", "dashed", "dotted", "dashdot")
 # MARKER_STYLES = {"point": ".", "circle": "o", "downward triangle": "v", "upward triangle": "^",
@@ -156,6 +160,7 @@ class BaseChartData:
     def __init__(self):
         self.name = ""
         self.visible = True
+        self.alt_axes = None
 
 
 class ScatterData(BaseChartData):
@@ -660,9 +665,13 @@ class AnnotationData(BaseChartData):
         self.annotations = []
         self.x = None
         self.y = None
+        self.end_x = None
+        self.end_y = None
         self.halignment = "left"
         self.valignment = "baseline"
         self.bbox = None
+        self.arrowprops = None
+        self.size = "medium"
         self.edit_panel = None
 
     def export_to_list(self) -> list:
@@ -672,6 +681,29 @@ class AnnotationData(BaseChartData):
         for i in range(len(self.annotations)):
             outlist.append("{}\t{}\t{}\n".format(self.x[i], self.y[i], self.annotations[i]))
         return outlist
+
+    def create_edit_panel(self):
+        return self.edit_panel
+
+
+class RectangleData(BaseChartData):
+    """
+    an object to draw an arbitrary rectangle on the plot
+    """
+    def __init__(self):
+        super().__init__()
+        self.x = None  # lower left corner
+        self.y = None  # lower left corner
+        self.height = None
+        self.width = None
+        self.face_color = "white"
+        self.edge_color = "black"
+        self.zorder = 1
+        self.clip = True
+        self.edit_panel = None
+
+    def export_to_list(self) -> list:
+        return []
 
     def create_edit_panel(self):
         return self.edit_panel
@@ -1064,9 +1096,10 @@ class ChartData:
 
     this will allow chart data exporting, as well as open up the possibility of figure editing
     """
-    def __init__(self, caption_type):
+    def __init__(self, caption_type, multi: Optional[str] = None):
         self.x_label = ""
         self.y_label = ""
+        self.multi = multi
         self.data = []
         # special adjustments
         self.suppress_y = False
@@ -1112,7 +1145,8 @@ class ChartData:
 
     def add_scatter(self, name: str, x_data, y_data, marker: Union[str, int] = "o", label="", zorder=0, color="#1f77b4",
                     edgecolors="#1f77b4", size: Union[list, Number] = 36, linewidths=1.5, linestyle="solid",
-                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight=0, min_weight=0):
+                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight=0, min_weight=0,
+                    alpha: Number = 1, alt_axes: Optional[int] = None):
         new_scatter = ScatterData()
         new_scatter.name = name
         new_scatter.x = x_data
@@ -1131,6 +1165,8 @@ class ChartData:
         new_scatter.weights = weights
         new_scatter.max_weight = max_weight
         new_scatter.min_weight = min_weight
+        new_scatter.alpha = alpha
+        new_scatter.alt_axes = alt_axes
         self.data.append(new_scatter)
         return new_scatter
 
@@ -1214,22 +1250,43 @@ class ChartData:
         self.data.append(new_labels)
         return new_labels
 
-    def add_annotations(self, name, annotations, x_data, y_data, halignment: str = "left",valignment: str = "baseline",
-                        bbox=None):
+    def add_annotations(self, name, annotations, x_data, y_data, end_x_data=None, end_y_data=None,
+                        halignment: str = "left",valignment: str = "baseline", bbox=None, arrowprops=None,
+                        size="medium", alt_axes: Optional[int] = None):
         new_annotation = AnnotationData()
         new_annotation.name = name
         new_annotation.x = x_data
         new_annotation.y = y_data
-        # new_annotation.end_x = end_x_data
-        # new_annotation.end_y = end_y_data
+        new_annotation.end_x = end_x_data
+        new_annotation.end_y = end_y_data
         new_annotation.annotations = annotations
         new_annotation.halignment = halignment
         new_annotation.valignment = valignment
         new_annotation.bbox = bbox
-        # new_annotation.arrowprops = arrowprops
+        new_annotation.arrowprops = arrowprops
+        new_annotation.size = size
+        new_annotation.alt_axes = alt_axes
         # new_annotation.xycoords = xycoords
         self.data.append(new_annotation)
         return new_annotation
+
+
+    def add_rectangle(self, name, x, y, height, width, facecolor="white", edgecolor="black", zorder=1,
+                      clip: bool = True, alt_axes: Optional[int] = None):
+        new_rect = RectangleData()
+        new_rect.name = name
+        new_rect.x = x
+        new_rect.y = y
+        new_rect.height = height
+        new_rect.width = width
+        new_rect.face_color = facecolor
+        new_rect.edge_color = edgecolor
+        new_rect.zorder = zorder
+        new_rect.clip = clip
+        new_rect.alt_axes = alt_axes
+        self.data.append(new_rect)
+        return new_rect
+
 
     # def add_marc_legend(self, name, legend_weights, legend_scale, legend_formats, scatter):
     def add_marc_legend(self, name: str, scatter: ScatterData) -> MARCLegendData:
@@ -1243,7 +1300,7 @@ class ChartData:
         return new_legend
 
 
-    def add_fill_area_x(self, name, x1, x2, y, zorder=0, color="red", alpha=0.5):
+    def add_fill_area_x(self, name, x1, x2, y, zorder=0, color="red", alpha=0.5, alt_axes: Optional[int] = None):
         new_fill = FillDataX()
         new_fill.name = name
         new_fill.x1_values = x1
@@ -1252,6 +1309,7 @@ class ChartData:
         new_fill.color = color
         new_fill.zorder = zorder
         new_fill.alpha = alpha
+        new_fill.alt_axes = alt_axes
         self.data.append(new_fill)
         return new_fill
 
@@ -1345,13 +1403,24 @@ def base_figure(figure_canvas):
     """
     create the baseline figure used for all plots
     """
-    # figure_canvas = FIGURE_CANVAS
     figure_canvas.figure.clf()  # clean any existing figures
     figure_canvas.figure.set_layout_engine("none")
     faxes = figure_canvas.figure.subplots()
     faxes.spines["right"].set_visible(False)
     faxes.spines["top"].set_visible(False)
-    # return figure_canvas, faxes
+    return faxes
+
+
+def base_figure_multi(figure_canvas, nr: int = 1, nc: int = 1, height_ratios = None, width_ratios = None):
+    """
+    create the baseline figure used for all plots
+    """
+    figure_canvas.figure.clf()  # clean any existing figures
+    figure_canvas.figure.set_layout_engine("none")
+    faxes = figure_canvas.figure.subplots(nr, nc, height_ratios=height_ratios, width_ratios=width_ratios)
+    for f in faxes:
+        f.spines["right"].set_visible(False)
+        f.spines["top"].set_visible(False)
     return faxes
 
 
@@ -1363,7 +1432,20 @@ def create_figure(chart_data, figure_canvas):
     which subsequently can allow user modification of plot styles and redrawing of the figure w/o needing to
     recalculate anything
     """
-    faxes = base_figure(figure_canvas)
+    if chart_data.multi == MARC_STYLE_2:
+        all_axes = base_figure_multi(figure_canvas, nr=2, nc=1, height_ratios=[2, 3])
+        faxes = all_axes[1]  # primary plot axis
+        faxes2 = all_axes[0]  # area for labeling
+        faxes2.spines["left"].set_visible(False)
+        faxes2.spines["bottom"].set_visible(False)
+        faxes2.set_yticklabels([])
+        faxes2.set_xticklabels([])
+        faxes2.set_xticks([])
+        faxes2.set_yticks([])
+    else:
+        faxes = base_figure(figure_canvas)
+        all_axes = None
+        faxes2 = None
     faxes.set_ylabel(chart_data.y_label)
     faxes.set_xlabel(chart_data.x_label)
     for data in chart_data.data:
@@ -1374,13 +1456,16 @@ def create_figure(chart_data, figure_canvas):
                 else:
                     # calculate new marker sizes from weights
                     minw, maxw = data.min_weight, data.max_weight
-                    # minw, maxw = min(data.weights), max(data.weights)
                     wrange = maxw - minw
                     marker_size = [data.min_size + (data.max_size-data.min_size)*(w-minw)/wrange for w in data.weights]
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
 
-                faxes.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
-                              color=data.color, edgecolors=data.edgecolors, s=marker_size, linewidths=data.linewidths,
-                              linestyle=data.linestyle, alpha=data.alpha)
+                ax.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
+                           color=data.color, edgecolors=data.edgecolors, s=marker_size, linewidths=data.linewidths,
+                           linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, LineData):
                 faxes.plot(data.x_values, data.y_values, linestyle=data.linestyle, color=data.color, zorder=data.zorder,
                            linewidth=data.linewidth)
@@ -1405,9 +1490,18 @@ def create_figure(chart_data, figure_canvas):
                                   linestyle=data.linestyle, zorder=data.zorder, linewidth=data.linewidth)
                 faxes.add_patch(arc)
             elif isinstance(data, AnnotationData):
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
                 for i in range(len(data.annotations)):
-                    faxes.annotate(data.annotations[i], (data.x[i], data.y[i]), ha=data.halignment, va=data.valignment,
-                                       bbox=data.bbox)
+                    if data.end_x is None:
+                        ax.annotate(data.annotations[i], (data.x[i], data.y[i]), ha=data.halignment, va=data.valignment,
+                                    bbox=data.bbox, arrowprops=data.arrowprops, wrap=True, size=data.size)
+                    else:
+                        ax.annotate(data.annotations[i], (data.x[i], data.y[i]), (data.end_x[i], data.end_y[i]),
+                                    ha=data.halignment, va=data.valignment, size=data.size, wrap=True,
+                                    bbox=data.bbox, arrowprops=data.arrowprops)
             elif isinstance(data, MARCLegendData):
                 # calculate new marker sizes
                 sc = data.scatter
@@ -1434,12 +1528,26 @@ def create_figure(chart_data, figure_canvas):
                 faxes.annotate("Less certain", (0.5, 0), (0.5, -0.5), xycoords=legend_artist,
                                ha="center", va="center", arrowprops=dict(facecolor="black", arrowstyle="<-"))
 
+
+            elif isinstance(data, RectangleData):
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
+                rectangle = matplotlib.patches.Rectangle((data.x, data.y), data.width, data.height,
+                                                         facecolor=data.face_color, edgecolor=data.edge_color,
+                                                         zorder=data.zorder, clip_on=data.clip)
+                ax.add_patch(rectangle)
             elif isinstance(data, HistogramData):
                 faxes.hist(data.bins[:-1], data.bins, weights=data.counts, edgecolor=data.edgecolor, color=data.color,
                            linewidth=data.linewidth, linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, FillDataX):
-                faxes.fill_betweenx(data.y_values, data.x1_values, data.x2_values, color=data.color,
-                                    edgecolor="none", zorder=data.zorder, alpha=data.alpha)
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
+                ax.fill_betweenx(data.y_values, data.x1_values, data.x2_values, color=data.color,
+                                 edgecolor="none", zorder=data.zorder, alpha=data.alpha)
             elif isinstance(data, ColorGrid):
                 cm = faxes.pcolormesh(data.x_values, data.y_values, data.z_values, shading="gouraud",
                                  cmap=data.colormap, zorder=0, vmin=0, vmax=100)
@@ -1477,24 +1585,32 @@ def create_figure(chart_data, figure_canvas):
         faxes.spines["left"].set_visible(False)
     if chart_data.rescale_x is not None:
         faxes.set_xlim(chart_data.rescale_x[0], chart_data.rescale_x[1])
+        if chart_data.multi == MARC_STYLE_2:
+            faxes2.set_xlim(chart_data.rescale_x[0], chart_data.rescale_x[1])
     if chart_data.rescale_y is not None:
         faxes.set_ylim(chart_data.rescale_y[0], chart_data.rescale_y[1])
     if chart_data.invert_y:
         faxes.invert_yaxis()
+    if chart_data.multi == MARC_STYLE_2:
+        figure_canvas.figure.subplots_adjust(hspace=0.05)
+
 
 
 def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float = 0.05,
                       bootstrap_n: Optional[int] = None, extra_name: Optional[str] = None,
-                      normal_ci: bool = True, fp_style: int = 0) -> ChartData:
+                      normal_ci: bool = True, fp_style: int = FP_STYLE_PLAIN) -> ChartData:
     chart_data = ChartData(analysis_type)
     chart_data.caption.e_label = effect_name
     chart_data.caption.alpha = alpha
     chart_data.caption.bootstrap_n = bootstrap_n
     chart_data.caption.normal_ci = normal_ci
+    is_basic = False
     if analysis_type == "grouped analysis":
         chart_data.caption.group_label = extra_name
     elif analysis_type == "cumulative analysis":
         chart_data.caption.order_label = extra_name
+    elif analysis_type == "basic analysis":
+        is_basic = True
 
     chart_data.x_label = effect_name
     chart_data.suppress_y = True
@@ -1505,7 +1621,6 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         bootstrap = True
 
     n_effects = len(forest_data)
-    # y_step = 10
 
     y_data = [-FOREST_STEP*d.order for d in forest_data]
     ci_y_data = [y for y in y_data for _ in range(2)]
@@ -1522,8 +1637,18 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     else:
         median_data = None
 
-    # used for scaled and thick styles
-    weights = [1/d.variance for d in forest_data]  # get weights
+    # used for scaled, thick, and rainforest styles
+    if is_basic:
+        # for a basic analysis, replace the weight of the first entry (the mean) with the average of the
+        # other weights
+        tmpweights = [1/d.variance for d in forest_data[1:]]
+        # meanw = max(tmpweights)
+        meanw = sum(tmpweights)/len(tmpweights)
+        weights = [meanw]
+        weights.extend(tmpweights)
+    else:
+        weights = [1/d.variance for d in forest_data]  # get weights
+
     minw, maxw = min(weights), max(weights)
     wrange = maxw - minw
 
@@ -1613,7 +1738,11 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
 
 
 def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0.05, marc_style: int = 0) -> ChartData:
-    chart_data = ChartData(analysis_type)
+    if marc_style == MARC_STYLE_2:
+        multi = MARC_STYLE_2
+    else:
+        multi = None
+    chart_data = ChartData(analysis_type, multi=multi)
     chart_data.caption.e_label = effect_name
     chart_data.caption.alpha = alpha
     chart_data.caption.style = marc_style
@@ -1621,31 +1750,52 @@ def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0
     chart_data.x_label = effect_name
     chart_data.y_label = get_text("Relative Weight")
 
-    # n_effects = len(forest_data)
+    if marc_style != MARC_STYLE_0:
+        grand_mean = marc_data[0]  # identify the grand mean
+    else:
+        grand_mean = None
 
-    # y_data = [-FOREST_STEP*d.order for d in forest_data]
-    # ci_y_data = [y for y in y_data for _ in range(2)]
-    # labels = [d.name for d in forest_data]
-    #
+    if marc_style == MARC_STYLE_2:
+        # remove the mean from the primary data set for style 2
+        marc_data = marc_data[1:]
+
     mean_data = [d.mean for d in marc_data]
     max_x = max(numpy.abs(mean_data))*1.1  # set x-limits to 10% more than largest value in either direction
     chart_data.rescale_x = [-max_x, max_x]
 
-    # var_data = [d.variance for d in marc_data]
-    raw_weights = [1/d.variance for d in marc_data]  # get weights
-    total_weights = sum(raw_weights)
+    raw_weights = [1 / d.variance for d in marc_data]  # get weights
+    if marc_style == MARC_STYLE_1:
+        total_weights = sum(raw_weights[1:])  # skip first entry (mean) when included
+    else:  # used for plot of studies which exclude calculated mean
+        total_weights = sum(raw_weights)
+    # if marc_style == MARC_STYLE_0:  # used for plot of studies without calculated mean
+    #     total_weights = sum(raw_weights)
+    # else:
+    #     total_weights = sum(raw_weights[1:])  # skip first entry (mean) when included
     rel_weights = [w/total_weights for w in raw_weights]
     minw, maxw = min(rel_weights), max(rel_weights)
 
-    if maxw < 0.1:
-        maxw = 0.1
+    if marc_style == MARC_STYLE_0:
+        if maxw < 0.1:
+            maxw = 0.1
+        maxwy = maxw
+    else:
+        if marc_style == MARC_STYLE_2:
+            maxwy = maxw
+        else:
+            maxwy = 1
+        maxw = 1
     minw = 0
 
-    wrange = maxw - minw
+    wrange = maxwy - minw
     min_marker_size = 1
-    max_marker_size = 400
+    if marc_style == MARC_STYLE_0:
+        max_marker_size = 400
+    else:
+        max_marker_size = 1600  # use larger default max when mean is included
+
     size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in rel_weights]
-    max_y = maxw*1.1
+    max_y = maxwy*1.1
     min_y = -wrange/10
     chart_data.rescale_y = [min_y, max_y]  # set scale for y-axis
 
@@ -1658,11 +1808,71 @@ def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0
                                                       label="mean", size=size, fixed_marker_size=False,
                                                       min_size=min_marker_size, max_size=max_marker_size,
                                                       weights=rel_weights, max_weight=maxw, min_weight=minw)
-    chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [min_y, max_y], color="red", alpha=0.25, zorder=1)
-    chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [min_y, max_y], color="blue", alpha=0.25, zorder=1)
+    if marc_style == MARC_STYLE_2:
+        chart_data.add_scatter("", [grand_mean.mean], [1], marker="o", zorder=5, label="mean", size=max_marker_size,
+                               weights=[1], max_weight=1, min_weight=minw, alt_axes=0)
 
+    if marc_style != MARC_STYLE_0:
+        # simulate point cloud around mean
+        nsim = 250  # there is no obvious reason to simulate 10,000 points then subsample from that
+        if marc_style == MARC_STYLE_1:
+            cloud_scale = 10
+        else:
+            cloud_scale = 1
+        sim_color = "darkblue"
+        sim_x = scipy.stats.norm.rvs(loc=grand_mean.mean, scale=math.sqrt(grand_mean.variance), size=nsim)
+        # simulate y values for corresponding normal deviates within a raindrop like distribution
+        sim_y = scipy.stats.norm.pdf(sim_x, loc=grand_mean.mean, scale=math.sqrt(grand_mean.variance))
+        max_sim = max(sim_y)
+        sim_y /= max_sim*cloud_scale  # rescale the PDF so values are between 0 and 1/cloud_scale
+        sim_y2 = scipy.stats.uniform.rvs(scale=sim_y)  # calculate random uniform deviates based on the rescaled PDF
+        sim_y = sim_y2 - sim_y/2 + 1  # shift values so they are centered on a value of 1
+        if marc_style == MARC_STYLE_2:
+            alt_axes = 0
+        else:
+            alt_axes = None
+        chart_data.add_scatter("", sim_x, sim_y, marker="o", size=9, alpha=0.2, color="white", edgecolors=sim_color,
+                               zorder=20, linewidths=0.5, alt_axes=alt_axes)
+        min_sim_y = min(sim_y)
+        i = numpy.where(sim_y == min_sim_y)[0][0]  # find a point with the lowest y coordinate
+        an_x, an_y = sim_x[i], sim_y[i]
+        if marc_style == MARC_STYLE_1:
+            an_x2, an_y2 = an_x+max_x/10, an_y-0.1
+        else:
+            an_x2, an_y2 = an_x+max_x/10, 0
 
-    # annotations
+        # add annotation to a low point
+        tmp_txt = get_text("MARC_point_annotation").format(f"{1-alpha:0.1%}", f"{grand_mean.lower_ci:0.2}",
+                                                           f"{grand_mean.upper_ci:0.2}", f"{grand_mean.mean:0.3}")
+        chart_data.add_annotations("", [tmp_txt], [an_x], [an_y], end_x_data=[an_x2], end_y_data=[an_y2],
+                                   valignment="top", size="small", halignment="center",
+                                   bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="darkgray", lw=2),
+                                   arrowprops=dict(edgecolor=sim_color, arrowstyle="<-",
+                                                   connectionstyle="arc3,rad=-0.5"), alt_axes=alt_axes)
+        # create background rectangle at top of chart and add text to it
+        if marc_style == MARC_STYLE_1:
+            chart_data.add_rectangle("", -max_x+max_x/20, 0.91, width=2*max_x-max_x/10, height=0.18, facecolor="white",
+                                     zorder=2, edgecolor="black")
+        else:
+            chart_data.add_rectangle("", -max_x+max_x/20, 0.2, width=2*max_x-max_x/10, height=1.6, facecolor="white",
+                                     zorder=2, edgecolor="black", alt_axes=alt_axes)
+        chart_data.add_annotations("", [get_text("SUMMARY OF THE EVIDENCE:")], [-max_x+max_x/10], [1],
+                                   valignment="center", size="large", halignment="left", alt_axes=alt_axes)
+        chart_data.add_annotations("", [get_text("MARC_summary_label").format(f"{grand_mean.mean:0.3}")],
+                                   [max_x*0.9], [1], valignment="center", halignment="right", alt_axes=alt_axes)
+
+    # background colors
+    chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [min_y, max_y], color="red", alpha=0.25,
+                               zorder=1)
+    chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [min_y, max_y], color="blue", alpha=0.25,
+                               zorder=1)
+    if marc_style == MARC_STYLE_2:
+        chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [-1, 2], color="red", alpha=0.25,
+                                   zorder=1, alt_axes=0)
+        chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [-1, 2], color="blue", alpha=0.25,
+                                   zorder=1, alt_axes=0)
+
+    # bottom annotations
     chart_data.add_annotations("", [get_text("Negative Effect"), get_text("Positive Effect")],
                                [-max_x/2, max_x/2], [min_y/2, min_y/2], halignment="center", valignment="center",
                                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="darkgray", lw=2))

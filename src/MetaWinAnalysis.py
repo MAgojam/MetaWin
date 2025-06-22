@@ -7,12 +7,13 @@ from typing import Optional
 import webbrowser
 
 from PyQt6.QtWidgets import QDialog, QPushButton, QLabel, QVBoxLayout, QGridLayout, QFrame, QComboBox, QGroupBox, \
-    QCheckBox, QLineEdit, QHBoxLayout
+    QCheckBox, QLineEdit, QHBoxLayout, QRadioButton
 from PyQt6.QtGui import QIcon, QIntValidator, QDoubleValidator
 
 from MetaWinData import MetaWinData
 import MetaWinConstants
 import MetaWinAnalysisFunctions
+import MetaWinCharts
 from MetaWinMessages import report_warning
 from MetaWinWidgets import add_ok_cancel_help_button_layout, add_cancel_help_button_layout, add_drag_drop_list, \
     create_list_item, add_effect_choice_to_dialog
@@ -52,6 +53,7 @@ class MetaAnalysisOptions:
         self.rosenthal_failsafe = None
         self.orwin_failsafe = None
         self.create_graph = False
+        self.graph_style = None
         self.k_estimator = "L"
         self.cor_test = "tau"
         self.norm_ci = True
@@ -365,6 +367,14 @@ class MetaAnalysisSimpleStructureExtraDialog(QDialog):
         self.orwin_label = None
         self.orwin_alpha_box = None
         self.graph_checkbox = None
+        self.style_group_box = None
+        self.style_plain = None
+        self.style_scaled = None
+        self.style_thick = None
+        self.style_rainforest = None
+        self.style_marc1 = None
+        self.style_marc2 = None
+
         self.help = MetaWinConstants.help_index["basic_analysis"]
         self.init_ui()
 
@@ -376,7 +386,29 @@ class MetaAnalysisSimpleStructureExtraDialog(QDialog):
 
         randomization_group = add_resampling_options_to_dialog(self, False)
 
+        # Graphical Output
+        # self.graph_checkbox = QCheckBox(get_text("Graph Effect Sizes and Mean (Forest Plot)"))
         self.graph_checkbox = QCheckBox(get_text("Graph Effect Sizes and Mean (Forest Plot)"))
+        self.graph_checkbox.clicked.connect(self.click_graph_checkbox)
+        self.style_group_box = QGroupBox()
+        # style_layout = QVBoxLayout()
+        style_layout = QGridLayout()
+        self.style_plain = QRadioButton(get_text("Plain Forest Plot"))
+        self.style_scaled = QRadioButton(get_text("Scaled Effect Size Forest Plot"))
+        self.style_thick = QRadioButton(get_text("Thick Forest Plot"))
+        self.style_rainforest = QRadioButton(get_text("Rainforest Plot"))
+        self.style_marc1 = QRadioButton(get_text("Meta Analytic Rain Cloud Plot (v1)"))
+        self.style_marc2 = QRadioButton(get_text("Meta Analytic Rain Cloud Plot (v2)"))
+        style_layout.addWidget(self.style_plain, 0, 0)
+        style_layout.addWidget(self.style_scaled, 1, 0)
+        style_layout.addWidget(self.style_thick, 2, 0)
+        style_layout.addWidget(self.style_rainforest, 0, 1)
+        style_layout.addWidget(self.style_marc1, 1, 1)
+        style_layout.addWidget(self.style_marc2, 2, 1)
+        self.style_group_box.setLayout(style_layout)
+        self.style_plain.setChecked(True)
+        self.graph_checkbox.setChecked(False)
+        self.click_graph_checkbox()
 
         # fail-safe tests
         failsafe_group = QGroupBox(get_text("Failsafe Tests"))
@@ -421,6 +453,7 @@ class MetaAnalysisSimpleStructureExtraDialog(QDialog):
         options_layout.addWidget(randomization_group)
         options_layout.addWidget(failsafe_group)
         options_layout.addWidget(self.graph_checkbox)
+        options_layout.addWidget(self.style_group_box)
 
         main_frame = QFrame()
         main_frame.setFrameShape(QFrame.Shape.Panel)
@@ -446,6 +479,12 @@ class MetaAnalysisSimpleStructureExtraDialog(QDialog):
         else:
             self.bootstrap_n_label.setEnabled(False)
             self.bootstrap_n_box.setEnabled(False)
+
+    def click_graph_checkbox(self):
+        if self.graph_checkbox.isChecked():
+            self.style_group_box.setEnabled(True)
+        else:
+            self.style_group_box.setEnabled(False)
 
     def click_rosenberg_checkbox(self):
         if self.rosenberg_checkbox.isChecked():
@@ -489,6 +528,18 @@ class MetaAnalysisSimpleStructureExtraDialog(QDialog):
         else:
             options.orwin_failsafe = None
         options.create_graph = self.graph_checkbox.isChecked()
+        if self.style_scaled.isChecked():
+            options.graph_style = MetaWinCharts.FP_STYLE_SCALED
+        elif self.style_thick.isChecked():
+            options.graph_style = MetaWinCharts.FP_STYLE_THICK
+        elif self.style_rainforest.isChecked():
+            options.graph_style = MetaWinCharts.FP_STYLE_RAINFOREST
+        elif self.style_marc1.isChecked():
+            options.graph_style = MetaWinCharts.MARC_STYLE_1
+        elif self.style_marc2.isChecked():
+            options.graph_style = MetaWinCharts.MARC_STYLE_2
+        else:
+            options.graph_style = MetaWinCharts.FP_STYLE_PLAIN
 
 
 class MetaAnalysisGroupedStructureDialog(QDialog):

@@ -194,7 +194,7 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Global Results": "Global Results",
                       "Graph": "Graph",
                       "Graph Cumulative Mean Effect (Forest Plot)": "Graph Cumulative Mean Effect (Forest Plot)",
-                      "Graph Effect Sizes and Mean (Forest Plot)": "Graph Effect Sizes and Mean (Forest Plot)",
+                      "Graph Effect Sizes and Mean (Forest Plot)": "Graph Effect Sizes and Mean",
                       "Graph Jackknife Means (Forest Plot)": "Graph Jackknife Means (Forest Plot)",
                       "Graph Mean Effect Sizes (Forest Plot)": "Graph Mean Effect Sizes (Forest Plot)",
                       "Graph Regression": "Graph Regression",
@@ -448,8 +448,20 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Max Width": "Max Width",
                       "Min Width": "Min Width",
                       "Rainforest": "Rainforest",
-                      "PDF Raindrops": "PDF Raindrops"
-                      }
+                      "PDF Raindrops": "PDF Raindrops",
+                      "Plain Forest Plot": "Plain Forest Plot",
+                      "Scaled Effect Size Forest Plot": "Scaled Effect Size Forest Plot",
+                      "Thick Forest Plot": "Thick Forest Plot",
+                      "Rainforest Plot": "Rainforest Plot",
+                      "Meta Analytic Rain Cloud Plot": "Meta Analytic Rain Cloud Plot",
+                      "SUMMARY OF THE EVIDENCE:": "SUMMARY OF THE EVIDENCE:",
+                      "MARC_summary_label": "Average effect = {}\nWeight 1.0",
+                      "MARC_point_annotation": "One out of 10,000+ possible values of the true effect size,\nbased "
+                                               "on the existing evidence.\n{} of the values fall between {} and "
+                                               "{},\nwith an average value of {}.",
+                      "Meta Analytic Rain Cloud Plot (v1)": "Meta Analytic Rain Cloud Plot (v1)",
+                      "Meta Analytic Rain Cloud Plot (v2)": "Meta Analytic Rain Cloud Plot (v2)"
+}
 
 # TEST_DICTIONARY = {"About Localization": "About Localization",
 #                    "About MetaWin": "Dis Here Be MetaWin",
