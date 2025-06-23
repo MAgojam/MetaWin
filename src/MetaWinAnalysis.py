@@ -53,7 +53,7 @@ class MetaAnalysisOptions:
         self.rosenthal_failsafe = None
         self.orwin_failsafe = None
         self.create_graph = False
-        self.graph_style = None
+        self.graph_style = 0
         self.k_estimator = "L"
         self.cor_test = "tau"
         self.norm_ci = True

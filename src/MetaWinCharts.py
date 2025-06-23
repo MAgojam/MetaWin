@@ -802,23 +802,14 @@ class ColorGrid(BaseChartData):
 # ---------- Chart Caption Classes ---------- #
 class NormalQuantileCaption:
     def __init__(self):
-        # self.upper_limit = None
         self.prediction_limit = None
-        # self.horizontal_mean = None
-        # self.vertical_mean = None
         self.means = None
         self.regression = None
         self.regression_scatter = None
 
     def __str__(self):
         regression_text = self.regression.style_text()
-        # upper_text = self.upper_limit.style_text()
-        # lower_text = self.lower_limit.style_text()
         style_text = get_text("normal_quantile_style").format(regression_text, self.prediction_limit.style_text())
-        # if upper_text == lower_text:
-        #     style_text = get_text("normal_quantile_style1").format(regression_text, upper_text)
-        # else:
-        #     style_text = get_text("normal_quantile_style2").format(regression_text, upper_text, lower_text)
         return get_text("normal_quantile_caption").format(get_citation("Wang_and_Bushman_1998")) + style_text + \
             create_reference_list(["Wang_and_Bushman_1998"], True)
 
@@ -989,7 +980,6 @@ class BasicAnalysisCaption(ForestPlotBaseCaption):
         #         self.base_forest_plot_caption() +
         #         get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha) + scale_text +
         #         cite_text)
-
         return (get_text("Forest plot of individual effect sizes for each study, as well as the overall mean.") +
                 self.base_forest_plot_caption() +
                 get_text("basic_analysis_forest_plot_extra").format(self.means.style_text(), 1-self.alpha, dist_text) +
@@ -1141,8 +1131,8 @@ class ChartData:
 
     def add_scatter(self, name: str, x_data, y_data, marker: Union[str, int] = "o", label="", zorder=0, color="#1f77b4",
                     edgecolors="#1f77b4", size: Union[list, Number] = 36, linewidths=1.5, linestyle="solid",
-                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight=0, min_weight=0,
-                    alpha: Number = 1, alt_axes: Optional[int] = None):
+                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight: Number = 0,
+                    min_weight: Number = 0, alpha: Number = 1, alt_axes: Optional[int] = None):
         new_scatter = ScatterData()
         new_scatter.name = name
         new_scatter.x = x_data
@@ -1262,7 +1252,6 @@ class ChartData:
         new_annotation.arrowprops = arrowprops
         new_annotation.size = size
         new_annotation.alt_axes = alt_axes
-        # new_annotation.xycoords = xycoords
         self.data.append(new_annotation)
         return new_annotation
 
@@ -1284,13 +1273,9 @@ class ChartData:
         return new_rect
 
 
-    # def add_marc_legend(self, name, legend_weights, legend_scale, legend_formats, scatter):
     def add_marc_legend(self, name: str, scatter: ScatterData) -> MARCLegendData:
         new_legend = MARCLegendData()
         new_legend.name = name
-        # new_legend.legend_weights = legend_weights
-        # new_legend.legend_scale = legend_scale
-        # new_legend.legend_formats = legend_formats
         new_legend.scatter = scatter
         self.data.append(new_legend)
         return new_legend
@@ -1344,8 +1329,8 @@ class ChartData:
         return new_violin
 
     def export_to_list(self):
-        outlist = ["X-axis label\t{}\n".format(self.x_label),
-                   "Y-axis label\t{}\n\n\n".format(self.y_label)]
+        outlist = [f"X-axis label\t{self.x_label}\n",
+                   f"Y-axis label\t{self.y_label}\n\n\n"]
         for dat in self.data:
             outlist.extend(dat.export_to_list())
             outlist.append("\n\n")
@@ -1730,9 +1715,6 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     return chart_data
 
 
-
-
-
 def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0.05, marc_style: int = 0) -> ChartData:
     if marc_style == MARC_STYLE_2:
         multi = MARC_STYLE_2
@@ -1764,10 +1746,6 @@ def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0
         total_weights = sum(raw_weights[1:])  # skip first entry (mean) when included
     else:  # used for plot of studies which exclude calculated mean
         total_weights = sum(raw_weights)
-    # if marc_style == MARC_STYLE_0:  # used for plot of studies without calculated mean
-    #     total_weights = sum(raw_weights)
-    # else:
-    #     total_weights = sum(raw_weights[1:])  # skip first entry (mean) when included
     rel_weights = [w/total_weights for w in raw_weights]
     minw, maxw = min(rel_weights), max(rel_weights)
 
@@ -1877,21 +1855,6 @@ def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0
     return chart_data
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def add_regression_to_chart(x_name: str, y_name: str, x_data, y_data, slope: float, intercept: float,
                             x_min: float, x_max: float, chart_data) -> None:
     y_at_min = slope*x_min + intercept
@@ -1941,21 +1904,12 @@ def add_quantile_axes_to_chart(x_data, y_data, slope: float, intercept: float, c
     y_lower = [y_pos[i] - t_score*math.sqrt(mse*(1 + 1/n + ((x_pos[i] - x_mean)**2)/ss_x)) for i in range(nsteps)]
     y_upper = [y_pos[i] + t_score*math.sqrt(mse*(1 + 1/n + ((x_pos[i] - x_mean)**2)/ss_x)) for i in range(nsteps)]
 
-    # chart_data.caption.lower_limit = chart_data.add_multi_line(get_text("Lower Prediction Limit"), x_pos, y_lower,
-    #                                                            linestyle="dashed", color="silver", zorder=3)
-    # chart_data.caption.upper_limit = chart_data.add_multi_line(get_text("Upper Prediction Limit"), x_pos, y_upper,
-    #                                                            linestyle="dashed", color="silver", zorder=3)
     chart_data.caption.prediction_limit = chart_data.add_multi_line(get_text("Prediction Limits"), x_pos, y_lower,
                                                                     linestyle="dashed", color="silver", zorder=3)
     upper_limit = chart_data.add_multi_line("", x_pos, y_upper, linestyle="dashed", color="silver", zorder=3)
     chart_data.caption.prediction_limit.link_style(upper_limit)
 
     # draw center lines
-    # chart_data.caption.horizontal_mean = chart_data.add_line(get_text("Horizontal Axis Mean Line"), 0,
-    #                                                          min(y_min, min(y_lower)), 0, max(y_max, max(y_upper)),
-    #                                                          linestyle="dotted", color="silver")
-    # chart_data.caption.vertical_mean = chart_data.add_line(get_text("Vertical Axis Mean Line"), x_min, y_mean, x_max,
-    #                                                        y_mean, linestyle="dotted", color="silver")
     chart_data.caption.means = chart_data.add_line(get_text("Axes Means"), 0, min(y_min, min(y_lower)), 0,
                                                    max(y_max, max(y_upper)), linestyle="dotted", color="silver")
     vertical_mean = chart_data.add_line("", x_min, y_mean, x_max, y_mean, linestyle="dotted", color="silver")
@@ -2245,10 +2199,6 @@ def chart_funnel_plot(x_data, y_data, mean_e, x_label: str = "x", y_label: str =
 
     if (y_label != "sample size") and (do_pseudo or do_contour or do_power):
         curve_y = numpy.linspace(y_min, y_max, 50)  # 50 points for a nice curve
-        # if y_label in ("standard error", "variance"):
-        #     curve_y = numpy.linspace(min(y_min, 0.001), y_max*1.15, 50)  # 50 points for a nice curve
-        # else:
-        #     curve_y = numpy.linspace(y_min*0.85, y_max*1.15, 50)  # 50 points for a nice curve
         if y_label == "standard error":
             sey = curve_y
         elif y_label == "precision":
@@ -2293,7 +2243,6 @@ def chart_funnel_plot(x_data, y_data, mean_e, x_label: str = "x", y_label: str =
         if do_power:
             z = scipy.stats.norm.ppf(0.975)
             power = 100*(1 - scipy.stats.norm.cdf(z - mean_e/sey) + scipy.stats.norm.cdf(-z - mean_e/sey))
-            # x = numpy.linspace(x_min, x_max, 50)
             x = [x_min, x_max]
             xc, yc = numpy.meshgrid(x, curve_y)
             zc = numpy.array([power for _ in x]).transpose()
