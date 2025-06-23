@@ -21,6 +21,8 @@ from matplotlib.figure import Figure
 import numpy
 import scipy
 import matplotlib.pyplot as pyplot
+import matplotlib
+
 
 # note these may be marked by the IDE as unknown modules, but pytest.ini will resolve the errors when tests
 # are actually executed
@@ -500,6 +502,91 @@ def test_simple_meta_analysis_bootstrap():
 
     output, chart_data, _ = MetaWinAnalysis.do_meta_analysis(data, options, 4)
     print_test_output(output)
+    if TEST_FIGURES:
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_simple_meta_analysis_scaled_graph():
+    data, _ = calc_hedges_d()
+    options = MetaWinAnalysis.MetaAnalysisOptions()
+    options.structure = MetaWinAnalysis.SIMPLE_MA
+    options.effect_data = data.cols[10]
+    options.effect_vars = data.cols[11]
+    options.create_graph = True
+    options.graph_style = MetaWinCharts.FP_STYLE_SCALED
+
+    output, chart_data, analysis_values = MetaWinAnalysis.do_meta_analysis(data, options, 4)
+    print_test_output(output)
+
+    if TEST_FIGURES:
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_simple_meta_analysis_thick_graph():
+    data, _ = calc_hedges_d()
+    options = MetaWinAnalysis.MetaAnalysisOptions()
+    options.structure = MetaWinAnalysis.SIMPLE_MA
+    options.effect_data = data.cols[10]
+    options.effect_vars = data.cols[11]
+    options.create_graph = True
+    options.graph_style = MetaWinCharts.FP_STYLE_THICK
+
+    output, chart_data, analysis_values = MetaWinAnalysis.do_meta_analysis(data, options, 4)
+    print_test_output(output)
+
+    if TEST_FIGURES:
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_simple_meta_analysis_rainforest_graph():
+    data, _ = calc_hedges_d()
+    options = MetaWinAnalysis.MetaAnalysisOptions()
+    options.structure = MetaWinAnalysis.SIMPLE_MA
+    options.effect_data = data.cols[10]
+    options.effect_vars = data.cols[11]
+    options.create_graph = True
+    options.graph_style = MetaWinCharts.FP_STYLE_RAINFOREST
+
+    output, chart_data, analysis_values = MetaWinAnalysis.do_meta_analysis(data, options, 4)
+    print_test_output(output)
+
+    if TEST_FIGURES:
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_simple_meta_analysis_marc1_graph():
+    data, _ = calc_hedges_d()
+    options = MetaWinAnalysis.MetaAnalysisOptions()
+    options.structure = MetaWinAnalysis.SIMPLE_MA
+    options.effect_data = data.cols[10]
+    options.effect_vars = data.cols[11]
+    options.create_graph = True
+    options.graph_style = MetaWinCharts.MARC_STYLE_1
+
+    output, chart_data, analysis_values = MetaWinAnalysis.do_meta_analysis(data, options, 4)
+    print_test_output(output)
+
+    if TEST_FIGURES:
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
+def test_simple_meta_analysis_marc2_graph():
+    data, _ = calc_hedges_d()
+    options = MetaWinAnalysis.MetaAnalysisOptions()
+    options.structure = MetaWinAnalysis.SIMPLE_MA
+    options.effect_data = data.cols[10]
+    options.effect_vars = data.cols[11]
+    options.create_graph = True
+    options.graph_style = MetaWinCharts.MARC_STYLE_2
+
+    output, chart_data, analysis_values = MetaWinAnalysis.do_meta_analysis(data, options, 4)
+    print_test_output(output)
+
     if TEST_FIGURES:
         test_win = TestFigureDialog(chart_data)
         test_win.exec()
@@ -1350,6 +1437,16 @@ def test_thick_forest_plot():
         test_win.exec()
 
 
+def test_rainforest_plot():
+    data, _ = calc_hedges_d()
+    e_col = data.cols[10]
+    v_col = data.cols[11]
+    if TEST_FIGURES:
+        chart_data = MetaWinDraw.draw_forest_plot(data, e_col, v_col, fp_style=MetaWinCharts.FP_STYLE_RAINFOREST)
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()
+
+
 def test_trim_and_fill_analysis():
     """
     funnel_test.txt contains a simulated data set; a true funnel plot was simulated where variance around a true
@@ -1702,18 +1799,12 @@ def test_linear_regression():
     assert round(lower, 1) == -45.4
     assert round(upper, 1) == -32.7
 
-    # print(scipy.stats.norm.ppf(0.025))
-    # curve_y = numpy.linspace(2, 26, 25)
-    # se = 1/curve_y
-    # z = scipy.stats.norm.ppf(0.975)
-    # power = 1 - scipy.stats.norm.cdf(z - 0.2/se) + scipy.stats.norm.cdf(-z - 0.2/se)
-    # x = [-1, 1]
-    # xc, yc = numpy.meshgrid(x, curve_y)
-    # zc = numpy.array([power for _ in x])
-    # print(xc)
-    # print(yc)
-    # print(zc)
-    # pyplot.pcolormesh(xc, yc, zc.transpose(), shading="nearest")
-    #
-    # pyplot.show()
 
+def test_marc_plot_0():
+    data, _ = calc_hedges_d()
+    e_col = data.cols[10]
+    v_col = data.cols[11]
+    if TEST_FIGURES:
+        chart_data = MetaWinDraw.draw_marc_plot(data, e_col, v_col, marc_style=MetaWinCharts.MARC_STYLE_0)
+        test_win = TestFigureDialog(chart_data)
+        test_win.exec()

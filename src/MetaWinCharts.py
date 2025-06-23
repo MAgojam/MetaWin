@@ -1000,10 +1000,32 @@ class BasicAnalysisCaption(ForestPlotBaseCaption):
             dist_text = get_text("normal_ci_dist")
         else:
             dist_text = get_text("mixed_ci_dist")
-        return get_text("Forest plot of individual effect sizes for each study, as well as the overall mean.") + \
-               self.base_forest_plot_caption() + \
-               get_text("basic_analysis_forest_plot_extra").format(self.means.style_text(), 1-self.alpha, dist_text) + \
-               self.extra_forest_plot_caption()
+
+        if self.style == FP_STYLE_SCALED:
+            scale_text = get_text("forest plot scaled means")
+            cite_text = ""
+        elif self.style == FP_STYLE_THICK:
+            scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        elif self.style == FP_STYLE_RAINFOREST:
+            scale_text = get_text("rainforest plot").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        else:
+            scale_text = ""
+            cite_text = ""
+        if self.style == FP_STYLE_PLAIN:
+            mean_text = ""
+        else:
+            mean_text = get_text("forest mean scale")
+        # return (get_text("Forest plot of individual effect sizes for each study.") +
+        #         self.base_forest_plot_caption() +
+        #         get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha) + scale_text +
+        #         cite_text)
+
+        return (get_text("Forest plot of individual effect sizes for each study, as well as the overall mean.") +
+                self.base_forest_plot_caption() +
+                get_text("basic_analysis_forest_plot_extra").format(self.means.style_text(), 1-self.alpha, dist_text) +
+                scale_text + mean_text + self.extra_forest_plot_caption() + cite_text)
 
 
 class GroupedAnalysisCaption(ForestPlotBaseCaption):
@@ -1042,13 +1064,19 @@ class MARCPlotCaption:
     def __init__(self):
         self.e_label = ""
         self.alpha = 0.05
-        self.style = 1
+        self.style = MARC_STYLE_0
         self.means = None
         self.no_effect = None
 
     def __str__(self):
-        return ""
-
+        if self.style == MARC_STYLE_0:
+            meanstr = ""
+            extrastr = ""
+        else:
+            meanstr = " and the mean"
+            extrastr = get_text("marc_caption2")
+        cite_text = create_reference_list(["Fitzgerald_Tipton_2022", "Fitzgerald_et_2025"], True)
+        return get_text("marc_caption1").format(meanstr) + extrastr + cite_text
 
 
 class FunnelPlotCaption:

@@ -149,14 +149,15 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                           "Forest plot of individual effect sizes for each study, as well as the overall mean.",
                       "study_forest_plot_extra": " Study effect sizes are indicated by {}, with the corresponding line "
                                                  "the {:0.0%} confidence interval based on a Normal distribution.",
-                      "forest plot scaled means": " The size of the mean marker is proportional to the study weight.",
+                      "forest plot scaled means": " The size of the marker is proportional to the study weight.",
                       "forest plot thick": " The height (thickness) of the line indicating the confidence interval is "
                                            "proportional to the study weight, after {}.",
-                      "rainforest plot": " The oblong shapes illustrate the probability density around the mean, "
+                      "rainforest plot": " The oblong shapes illustrate the probability density around the effect size, "
                                          "represented by both the shape and color of the raindrop, after {}.",
                       "basic_analysis_forest_plot_extra": " Study and mean effect sizes are indicated by {}, with the "
                                                           "corresponding line the {:0.0%} confidence interval based on "
                                                           "{}.",
+                      "forest mean scale": " The mean effect size is scaled as the average weight across the studies.",
                       "mid_forest_plot_caption": " Mean effect sizes are indicated by {}, with the corresponding "
                                                  "line the {:0.0%} confidence interval based on {}.",
                       "normal_ci_dist": "the Normal distribution",
@@ -453,14 +454,21 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Scaled Effect Size Forest Plot": "Scaled Effect Size Forest Plot",
                       "Thick Forest Plot": "Thick Forest Plot",
                       "Rainforest Plot": "Rainforest Plot",
-                      "Meta Analytic Rain Cloud Plot": "Meta Analytic Rain Cloud Plot",
+                      "Meta Analytic Rain Cloud Plot": "Meta-Analytic Rain Cloud Plot",
                       "SUMMARY OF THE EVIDENCE:": "SUMMARY OF THE EVIDENCE:",
                       "MARC_summary_label": "Average effect = {}\nWeight 1.0",
                       "MARC_point_annotation": "One out of 10,000+ possible values of the true effect size,\nbased "
                                                "on the existing evidence.\n{} of the values fall between {} and "
                                                "{},\nwith an average value of {}.",
-                      "Meta Analytic Rain Cloud Plot (v1)": "Meta Analytic Rain Cloud Plot (v1)",
-                      "Meta Analytic Rain Cloud Plot (v2)": "Meta Analytic Rain Cloud Plot (v2)"
+                      "Meta Analytic Rain Cloud Plot (v1)": "Meta-Analytic Rain Cloud Plot (v1)",
+                      "Meta Analytic Rain Cloud Plot (v2)": "Meta-Analytic Rain Cloud Plot (v2)",
+                      "marc_caption1": "Meta-analytic rain cloud plot of effect sizes for each study{}. Effect size "
+                                       "is indicated by position on the horizontal axis and the relative weight of "
+                                       "the study is indicated by both the position on the vertical axis and the size "
+                                       "of the marker.",
+                      "marc_caption2": " Other plausible values of the true effect size are simulated based on the "
+                                       "existing evidence and uncertainty and displayed as a cloud of small points "
+                                       "around the marker of the mean."
 }
 
 # TEST_DICTIONARY = {"About Localization": "About Localization",

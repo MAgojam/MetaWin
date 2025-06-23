@@ -117,8 +117,15 @@
                 <ul>
                     <li><a href="#scatter_plot">Scatter Plot</a></li>
                     <li><a href="#weighted_histogram">Weighted Histogram</a></li>
-                    <li><a href="#forest_plot">Forest Plot</a></li>
-                    <li><a href="#marc_plot">Meta Analytic Rain Cloud Plot</a></li>
+                    <li><a href="#forest_plot">Forest Plot</a>
+                    <ul>
+                    <li><a href="#forest_plot_plain">Plain Forest Plot</a>
+                    <li><a href="#forest_plot_scaled">Scaled Effect Size Forest Plot</a>
+                    <li><a href="#forest_plot_thick">Thick Forest Plot</a>
+                    <li><a href="#forest_plot_rainforest">Rainforest Plot</a>
+                    </ul>
+                    </li>
+                    <li><a href="#marc_plot">Meta-Analytic Rain Cloud Plot</a></li>
                     <li><a href="#normal_quantile_plot">Normal Quantile Plot</a></li>
                     <li><a href="#galbraith_plot">Galbraith (Radial) Plot</a></li>
                 </ul>
@@ -1311,14 +1318,33 @@ Funnel plot of effect vs. precision, showing the results of a Trim and Fill Anal
             </p>
            <h3>Graphical Output</h3>
             <p>
-                One can optionally include a graphical figure as output. For this analysis this will be a
-                <a href="#forest_plot">forest plot</a>a>, showing the global mean and its confidence intervals at
-                the top of the figure, with all of the individual studies beneath.
+                One can optionally include a graphical figure as output. For this analysis, one can choose one of the
+                <a href="#forest_plot">forest plot</a> variants or a <a href="#marc_plot">meta-analytic rain cloud
+                plot (MARC)</a>.</p>
+            <p>The four versions of the forest plot are more-or-less identical to those drawn for the
+                studies directly, except the top of the plot displays the mean and its confidence interval. For the
+                scaled effect size, thick, and rainforest variants, the mean is displayed with a weight equivalent
+                to the average of that of the input studies (otherwise, unless the number of studies is very small,
+                the relative weight of the mean will overload the representation of those individual studies).</p>
+             <p>
+                If a bootstrap analysis is conducted and one of the forest plots is chosen for graphical output,
+                the results of the individual bootstrap replicates are drawn in the background of the mean as a
+                rain drop distribution (<a href="#barrowman_myers_2003">Barrowman and Myers 2003</a>). Depending
+                on the exact version of the plot displayed, the various options can become a bit overhwelming;
+                individual elements can always be turned off by <a href="#graph_edit">editing the figure</a>.
+            </p>
+
+            <p>The two MARC variants differ in the manner in which the summary is displayed relative to the rest
+                of the data (<a href="#fitzgerald_et_2025">Fitzgerald <em>et al.</em> 2025</a>). In the first variant,
+                the mean is plotted on the same vertical axis as the individual
+                studies;in the second variant the mean is plotted on an independent vertical axis. The second
+                variant is generally recommended unless the total number of studies is small.
             </p>
 
            <h3>Output</h3>
             <p>
-                The following is an example of the output from a basic analysis. Specifics are dependent on the
+                The following is an example of the output from a basic analysis, including bootstrapping and a plain
+                forest plot. Specifics are dependent on the
                 options chosen as well as the data.
             </p>
 <blockquote class="output-example">
@@ -1417,15 +1443,73 @@ Fail-safe n = 19.8523
 </blockquote>
             <figure><img src="images/analysis_basic_fig.png"></figure>
 <blockquote class="output-example">
-    Forest plot of individual effect sizes for each study, as well as the overall mean. Effect size measured
-    as Hedges' d. The dotted vertical line represents no effect, or a mean of zero. Circles represent mean effect
-    size, with the corresponding line the 95% confidence interval. X's represent the median. Upward-pointing
-    triangles mark the confidence interval from a bootstrap (999 iterations) procedure, following Adams <em>et
-        al.</em> (1997); downward-pointing triangles mark the bias-corrected bootstrap interval.
+    Forest plot of individual effect sizes for each study, as well as the overall mean. Effect size measured as
+    Hedges' d. The vertical dotted silver line represents no effect. Study and mean effect sizes are indicated by
+    bluish circles, with the corresponding line the 95% confidence interval based on the Normal
+    distribution. Medians are represented by pumpkin orange Xs. Confidence intervals from a boostrap
+    (999 iterations) procedure, following Adams et al. (1997), are indicated by green upward carets;
+    the bias-corrected bootstrap interval is indicated by tomato downward carets; and the full
+    distribution of the bootstrapped values are indicated by the sunflower yellow raindrop.
+
     <p><strong>References</strong></p>
 Adams, D.C., J. Gurevitch, and M.S. Rosenberg (1997) Resampling tests for meta-analysis of ecological data.
     <em>Ecology</em> 78:1277–1283.
 </blockquote>
+
+            <h4>Examples of meta-analytic rain cloud (MARC) figures </h4>
+            <p>The following figures come from the identical analysis as above, but choosing to graph each variant
+                of the meta-analytic rain cloud plot. Note that the annotations and legend are automatically placed
+            and may not be optimal for all data configurations. Rescaling the size and shape of the figure by
+            changing the size of program window might help.</p>
+
+            <h5>Meta-analytic rain cloud plot, version 1</h5>
+            <p>In the original version of the MARC plot (<a href="#fitzgerald_tipton_2022">Fitzgerald and
+                Tipton 2022</a>), the calculated mean is plotted on the same vertical axis as the studies.
+            Unless the number of studies is quite small, the high relative weight of the mean (definitionally equal to
+                one) will tend to
+            push the points of the individual studies close to the baseline of the plot.</p>
+            <figure><img src="images/analysis_basic_fig_marc1.png"></figure>
+            <blockquote class="output-example">
+                <p>Meta-analytic rain cloud plot of effect sizes for each study and the mean. Effect size is
+                    indicated by position on the horizontal axis and the relative weight of the study is indicated
+                    by both the position on the vertical axis and the size of the marker. Other plausible values of
+                    the true effect size are simulated based on the existing evidence and uncertainty and displayed
+                    as a cloud of small points around the marker of the mean.</p>
+                <p><strong>References</strong></p>
+                <p>Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain cloud plot: A new approach to
+                    visualizing clearinghouse data. <em>Journal of Research Educational Effectiveness</em>
+                    15(4):848–875. DOI: 10.1080/19345747.2022.2031366</p>
+                <p>Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025) Meta-analytic rain cloud plots:
+                    Improving evidence communication through data visualization design principles. <em>Research
+                        Synthesis Methods</em> 16:343–382. DOI: 10.1017/rsm.2025.4</p>
+            </blockquote>
+
+            <h5>Meta-analytic rain cloud plot, version 2</h5>
+            <p>In the modified version of the MARC plot (<a href="#fitzgerald_et_2025">Fitzgerald <em> et al.</em>
+                2025</a>), the calculated mean is plotted on a separate axis from the studies. This prevents the
+                high relative weight of the mean from pushing the points of the individual studies close to the
+                baseline of the plot, creating a better illustration of the distribution across studies.
+                Generally, this would be the preferred version for most analyses.</p>
+                <p> The bottom part of this plot is essentially identical to the figure created by choosing to
+                <a href="#marc_plot">draw a MARC plot</a> as the figure created by that drawing option
+                    does not include the calculation of the mean and related annotations.</p>
+            <figure><img src="images/analysis_basic_fig_marc2.png"></figure>
+            <blockquote class="output-example">
+                <p>Meta-analytic rain cloud plot of effect sizes for each study and the mean. Effect size is
+                    indicated by position on the horizontal axis and the relative weight of the study is indicated
+                    by both the position on the vertical axis and the size of the marker. Other plausible values of
+                    the true effect size are simulated based on the existing evidence and uncertainty and displayed
+                    as a cloud of small points around the marker of the mean.</p>
+                <p><strong>References</strong></p>
+                <p>Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain cloud plot: A new approach to
+                    visualizing clearinghouse data. <em>Journal of Research Educational Effectiveness</em>
+                    15(4):848–875. DOI: 10.1080/19345747.2022.2031366</p>
+                <p>Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025) Meta-analytic rain cloud plots:
+                    Improving evidence communication through data visualization design principles. <em>Research
+                        Synthesis Methods</em> 16:343–382. DOI: 10.1017/rsm.2025.4</p>
+            </blockquote>
+
+
 
 
           <h2 id="jackknife_analysis">Jackknife Meta-Analysis</h2>
@@ -1830,7 +1914,7 @@ Forest plot of effect sizes from a cumulative meta-analysis, ranging from the fe
            <h3>Output</h3>
             <p>
                 The output for a Grouped Meta-Analysis includes group specific output, as well as the
-                same general output found in a <a href="#basic_analysuis">Basic
+                same general output found in a <a href="#basic_analysis">Basic
                 Analysis</a>. The graphical output, if requested, is a forest plot which shows the global mean
                 and the group means.
             </p>
@@ -2669,21 +2753,28 @@ ratio = 2.8047
                 input studies. Note that the figure can become overwhelmed with a large number of studies. To draw a
                 forest plot, choose <span class="menu">Forest Plot</span> from
                 the <span class="menu">Draw</span> menu. From here you can specify the Effect Size and Variance.
+                There are four styles of Forest Plot to choose from. The figure will show up in the
+                <a href="#graph_tab">Graph Tab</a>.
             </p>
             <figure><img src="images/draw_forest.png"></figure>
             <p>
-                The figure will show up in the <a href="#graph_tab">Graph Tab</a>. The forest plot will stack each
-                observation vertically, in the order they appear in the data matrix.
-                The point indicates the observed effect size and the corresponding line it's 95% confidence interval
+                All forest plot styles stack each observation vertically, in the order they appear in the data matrix.
+                A symbol indicates the observed effect size and the corresponding line it's 95% confidence interval
                 based on the variance, with the corresponding study label (the row header) listed on the left side of
                 the figure. A vertical silver dotted line marks an effect size of zero (generally the null hypothesis for
-                standardized effect sizes).
+                standardized effect sizes). The plot styles differ in how they display additional information.
             </p>
             <p>
                 The confidence interval can be modified by <a href="#alpha_level">choosing a different significance
                 level from the output options</a>.
             </p>
-           <h3>Output Example</h3>
+
+          <h3 id="forest_plot_plain">Plain Forest Plot</h3>
+            <p>
+                In the plain forest plot, no additional information is provided, and the size of symbols and the
+                thickness of the confidence intervals are the same for all studies.
+            </p>
+           <h4>Output Example</h4>
             <figure><img src="images/example_forest.png"></figure>
             <blockquote class="output-example">
                 Forest plot of individual effect sizes for each study. Effect size measured as Hedges' d. The
@@ -2691,18 +2782,109 @@ ratio = 2.8047
                 with the corresponding line the 95% confidence interval.
             </blockquote>
 
-
-
-
-
-
-          <h2 id="marc_plot">Meta Analytic Rain Cloud Plot</h2>
+          <h3 id="forest_plot_scaled">Scaled Effect Size Forest Plot</h3>
             <p>
-                A meta analytic rain cloud plot...
+                In the scaled effect size forest plot, the size of the symbol representing the effect size for each
+                study is scaled relative to the weight of the study, with larger weights leading to larger symbols.
+                The minimum and maximum size of the symbols can be changed via the graph options.
+            </p>
+           <h4>Output Example</h4>
+            <figure><img src="images/example_forest_scaled.png"></figure>
+            <blockquote class="output-example">
+                Forest plot of individual effect sizes for each study. Effect size measured as Hedges' d. The
+                vertical dotted silver line represents no effect. Study effect sizes are indicated by bluish
+                circles, with the corresponding line the 95% confidence interval based on a Normal distribution.
+                The size of the marker is proportional to the study weight. The minimum and maximum size of the
+                markers can be changed via <a href="#graph_edit">editing the figure</a>.
+            </blockquote>
+
+         <h3 id="forest_plot_thick">Thick Forest Plot</h3>
+            <p>
+                In the thick forest plot (<a href="#schild_voracek_2014">Schild and Voracek 2014</a>), the
+                thickness (height) of the confidence interval
+                for each study is scaled relative to the weight of the study, with larger weights leading to thicker
+                lines. The minimum and maximum size of the lines can be changed via
+                <a href="#graph_edit">editing the figure</a>.
+            </p>
+           <h4>Output Example</h4>
+            <figure><img src="images/example_forest_thick.png"></figure>
+            <blockquote class="output-example">
+                <p>
+               Forest plot of individual effect sizes for each study. Effect size measured as Hedges' d. The
+                vertical dotted silver line represents no effect. Study effect sizes are indicated by fire engine
+                red vertical lines, with the corresponding line the 95% confidence interval based on a Normal
+                distribution. The height (thickness) of the line indicating the confidence interval is proportional
+                to the study weight, after Schild and Voracek (2014).</p>
+                <p><strong>References</strong></p>
+                <p>Schild, A.H.E., and M. Voracek (2014) Finding your way out of the forest without a trail of
+                    bread crumbs: Development and evaluation of two novel displays of forest plots.
+                    <em>Research Synthesis Methods</em> 6:74&ndash;86. DOI: 10.1002/jrsm.1125</p>
+            </blockquote>
+
+         <h3 id="forest_plot_rainforest">Rainforest Plot</h3>
+            <p>
+                In the rainforest plot (<a href="#schild_voracek_2014">Schild and Voracek 2014</a>), the
+                probability density function (PDF) for the effect size is displayed in rain drop form, following the
+                idea of <a href="#barrowman_myers_2003">Barrowman and Myers (2003)</a>. In addition to indicating the
+                PDF by the shape of the rain drop, color is used to indicate the relative probability, with darker
+                shades (by default) representing higher probability than lighter shades. As with scaled effect size
+                plots, the height of the rain drop is scaled to indicate the weight associated with a particular
+                study. The effect size and the confidence interval are indicated by white lines superimposed on
+                top of the rain drop.
+            </p>
+           <h4>Output Example</h4>
+            <figure><img src="images/example_rainforest.png"></figure>
+            <blockquote class="output-example">
+                <p>
+                Forest plot of individual effect sizes for each study. Effect size measured as Hedges' d. The
+                vertical dotted silver line represents no effect. Study effect sizes are indicated by white
+                vertical lines, with the corresponding line the 95% confidence interval based on a Normal
+                distribution. The oblong shapes illustrate the probability density around the effect size, represented
+                by both the shape and color of the raindrop, after Schild and Voracek (2014).
+                    </p>
+                <p><strong>References</strong></p>
+                <p>Schild, A.H.E., and M. Voracek (2014) Finding your way out of the forest without a trail of
+                    bread crumbs: Development and evaluation of two novel displays of forest plots.
+                    <em>Research Synthesis Methods</em> 6:74&ndash;86. DOI: 10.1002/jrsm.1125</p>
+            </blockquote>
+
+
+          <h2 id="marc_plot">Meta-Analytic Rain Cloud Plot</h2>
+            <p>
+                The meta-analytic rain cloud (MARC) plot (<a href="#fitzgerald_et_2025">Fitzgerald and Tipton 2022</a>,
+                <a href="#fitzgerald_et_2025">Fitzgerald <em>et al.</em> 2025</a>) was designed as an alternative
+                to bar plots, forest plots, and rainforest plots, trying to draw on the strenghts of each while
+                emphasizing intepretabililty. The effect size of each study is plotted versus its relative weight,
+                with the weight also indicated by the size of the marker. Confidence intervals are not plotted as
+                they are highly inversely correlated with the weight. The figure is also highly annotated to improve
+                and guide interpretation.
+            </p>
+            <p>
+                The version of the figure created by this procedure in <em>MetaWin</em> is slightly different than the
+                original MARC plot. In that version, the mean effect size (definitionally with a weight of one) and a
+                simulated cloud of potential true means based on the calculated mean and variance are displayed
+                at the top of the figure. The draw function in MetaWin does not include the calculation of the mean,
+                so only displays the input studies (just as with forest plots created through the draw
+                function). To create a MARC plot that includes the mean, simulated cloud, and extra annotations,
+                choose to display the graphical results as a MARC plot when conducting a
+                <a href="#basic_analysis">basic analysis</a>.
             </p>
 
-
-
+           <h4>Output Example</h4>
+            <figure><img src="images/example_marc0.png"></figure>
+            <blockquote class="output-example">
+                <p>
+                   Meta-analytic rain cloud plot of effect sizes for each study. Effect size is indicated by position
+                    on the horizontal axis and the relative weight of the study is indicated by both the position on
+                    the vertical axis and the size of the marker.</p>
+                <p><strong>References</strong></p>
+                  <p>Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain cloud plot: A new approach to
+                      visualizing clearinghouse data. <em>Journal of Research Educational Effectiveness</em>
+                      15(4):848–875. DOI: 10.1080/19345747.2022.2031366</p>
+                  <p>Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025) Meta-analytic rain cloud plots:
+                      Improving evidence communication through data visualization design principles. <em>Research
+                          Synthesis Methods</em> 16:343–382. DOI: 10.1017/rsm.2025.4</p>
+            </blockquote>
 
 
           <h2 id="normal_quantile_plot">Normal Quantile Plot</h2>
@@ -2798,6 +2980,10 @@ ratio = 2.8047
                     for meta-analysis of ecological data. <em>Ecology</em> 78(4):1277&ndash;1283.</span>
                     DOI: <a href="https://doi.org/10.1890/0012-9658(1997)078[1277:RTFMAO]2.0.CO;2">
                         10.1890/0012-9658(1997)078[1277:RTFMAO]2.0.CO;2</a></li>
+                <li><span id="barrowman_myers_2003">Barrowman, N.J., and R.A. Myers (2003) Raindrop plots: A new
+                    way to display collections of likelihoods and distributions. <em>American Statistician</em>
+                    57(4):268-274.</span>
+                    DOI: <a href="https://doi.org/10.1198/0003130032369">10.1198/0003130032369</a></li>
                 <li><span id="begg_1994">Begg, C.B. (1994) Publication bias. Pp. 399-409 in <em>The Handbook of
                     Research Synthesis</em>, H. Cooper and L.V. Hedges, eds. Sage, New York.</span></li>
                 <li><span id="begg_mazumdar_1994">Begg, C.B., and M. Mazumdar (1994) Operating characteristics of a
@@ -2828,6 +3014,14 @@ ratio = 2.8047
                     DOI: <a href="https://10.1136/bmj.315.7109.629">10.1136/bmj.315.7109.629</a></li>
                 <li><span id="fisher_1928">Fisher, R.A. (1928) <em>Statistical methods for research workers</em>
                     (2nd edition). Oliver and Boyd, London.</span></li>
+                <li><span id="fitzgerald_et_2025">Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025)
+                    Meta-analytic rain cloud plots: Improving evidence communication through data visualization
+                    design principles. <em>Research Synthesis Methods</em> 16:343&ndash;382.</span>
+                    DOI: <a href="https://10.1017/rsm.2025.4">10.1017/rsm.2025.4</a></li>
+                <li><span id="fitzgerald_tipton_2022">Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain
+                    cloud plot: A new approach to visualizing clearinghouse data. <em>Journal of Research Educational
+                        Effectiveness</em> 15(4):848&ndash;875.</span>
+                    DOI: <a href="https://10.1080/19345747.2022.2031366">10.1080/19345747.2022.2031366</a></li>
                 <li><span id="galbraith_1988">Galbraith, R.F. (1988) A note on graphical presentation of estimated
                     odds ratios from several clinical trials. <em>Statistics in Medicine</em>
                     7:889&ndash;894.</span>
@@ -2922,6 +3116,10 @@ ratio = 2.8047
                 <li><span id="rosenthal_1979">Rosenthal, R. (1979) The &ldquo;file drawer problem&rdquo; and tolerance
                     for null results. <em>Psychological Bulletin</em> 86(3):638&ndash;641.</span>
                     DOI: <a href="https://doi.org/10.1037/0033-2909.86.3.638">10.1037/0033-2909.86.3.638</a></li>
+                <li><span id="schild_voracek_2014">Schild, A.H.E., and M. Voracek (2014) Finding your way out
+                    of the forest without a trail of bread crumbs: Development and evaluation of two novel displays
+                    of forest plots. <em>Research Synthesis Methods</em> 6:74&ndash;86.</span>
+                    DOI: <a href="https://doi.org/10.1002/jrsm.1125">10.1002/jrsm.1125</a></li>
                 <li><span id="sokal_rohlf_1995">Sokal, R.R., and F.J. Rohlf (1995) <em>Biometry: The Principles and
                     Practice of Statistics in Biological Research</em>. 3rd edition. W.H. Freeman, New York.</span></li>
                 <li><span id="spearman_1904">Spearman C. (1904) The proof and measurement of association between two

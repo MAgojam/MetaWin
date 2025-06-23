@@ -186,6 +186,16 @@ references = {
     "Fisher_1928": ["Fisher, R.A. (1928) <em>Statistical methods for research workers</em> (2nd edition). "
                     "Oliver and Boyd, London.", "Fisher (1928)", ""],
 
+    "Fitzgerald_et_2025": ["Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025) Meta-analytic rain cloud "
+                           "plots: Improving evidence communication through data visualization design principles. "
+                           "<em>Research Synthesis Methods</em> 16:343&ndash;382.",
+                           "Fitzgerald <em>et al.</em> (2025)", "10.1017/rsm.2025.4"],
+
+    "Fitzgerald_Tipton_2022": ["Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain cloud plot: A new "
+                               "approach to visualizing clearinghouse data. <em>Journal of Research Educational "
+                               "Effectiveness</em> 15(4):848&ndash;875.",
+                               "Fitzgerald and Tipton (2022)", "10.1080/19345747.2022.2031366"],
+
     "Galbraith_1988": ["Galbraith, R.F. (1988) A note on graphical presentation of estimated odds ratios from "
                        "several clinical trials. <em>Statistics in Medicine</em> 7:889&ndash;894.",
                        "Galbraith (1988)", "10.1002/sim.4780070807"],
