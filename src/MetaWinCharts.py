@@ -161,6 +161,22 @@ class BaseChartData:
         self.name = ""
         self.visible = True
         self.alt_axes = None
+        self.edit_panel = None
+
+
+    @staticmethod
+    def export_to_list(self) -> list:
+        # default - overload when necessary
+        return []
+
+    @staticmethod
+    def style_text() -> str:
+        # default - overload when necessary
+        return ""
+
+    def create_edit_panel(self):
+        # default - overload when necessary
+        return self.edit_panel
 
 
 class ScatterData(BaseChartData):
@@ -185,7 +201,6 @@ class ScatterData(BaseChartData):
         self.label = ""
         self.alpha = 1
         self.zorder = 0
-        self.edit_panel = None
         self.edgecolor_button = None
         self.linewidth_box = None
         self.linestyle_box = None
@@ -201,10 +216,10 @@ class ScatterData(BaseChartData):
 
     def export_to_list(self) -> list:
         outlist = ["Scatter Plot Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\n"]
         for i in range(len(self.x)):
-            outlist.append("{}\t{}\n".format(self.x[i], self.y[i]))
+            outlist.append(f"{self.x[i]}\t{self.y[i]}\n")
         return outlist
 
     def create_edit_panel(self):
@@ -314,7 +329,6 @@ class HistogramData(BaseChartData):
         self.edgecolor = "black"
         self.alpha = 1
         # style editing
-        self.edit_panel = None
         self.edgewidth_box = None
         self.edgestyle_box = None
         self.bar_color_button = None
@@ -323,10 +337,10 @@ class HistogramData(BaseChartData):
 
     def export_to_list(self) -> list:
         outlist = ["Histogram Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "count\tlower\tupper\n"]
         for i in range(len(self.counts)):
-            outlist.append("{}\t{}\t{}\n".format(self.counts[i], self.bins[i], self.bins[i+1]))
+            outlist.append(f"{self.counts[i]}\t{self.bins[i]}\t{self.bins[i+1]}\n")
         return outlist
 
     def create_edit_panel(self):
@@ -367,18 +381,14 @@ class LabelData(BaseChartData):
         super().__init__()
         self.labels = None
         self.y_pos = None
-        self.edit_panel = None
 
     def export_to_list(self) -> list:
         outlist = ["Data Labels\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "Y-position\tLabel\n"]
         for i in range(len(self.labels)):
-            outlist.append("{}\t{}\n".format(self.y_pos[i], self.labels[i]))
+            outlist.append(f"{self.y_pos[i]}\t{self.labels[i]}\n")
         return outlist
-
-    def create_edit_panel(self):
-        return self.edit_panel
 
 
 class ForestCIData(BaseChartData):
@@ -399,7 +409,6 @@ class ForestCIData(BaseChartData):
         self.max_width = 10
         self.weights = None
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linestyle_box = None
         self.linewidth_box = None
@@ -408,10 +417,10 @@ class ForestCIData(BaseChartData):
 
     def export_to_list(self) -> list:
         outlist = ["Forest Plot CI Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "lower\tupper\ty\n"]
         for i in range(len(self.y)):
-            outlist.append("{}\t{}\t{}\n".format(self.min_x[i], self.max_x[i], self.y[i]))
+            outlist.append(f"{self.min_x[i]}\t{self.max_x[i]}\t{self.y[i]}\n")
         return outlist
 
     def create_edit_panel(self):
@@ -472,12 +481,8 @@ class RainforestData(BaseChartData):
         self.zorder = 0
         self.colormap = "Blues"
 
-        self.edit_panel = None
         self.map_box = None
         self.rev_map_box = None
-
-    def export_to_list(self) -> list:
-        return []
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
@@ -493,9 +498,6 @@ class RainforestData(BaseChartData):
         if self.rev_map_box.isChecked():
             self.colormap += "_r"
 
-    def style_text(self) -> str:
-        return ""
-
 
 class ViolinData(BaseChartData):
     """
@@ -509,12 +511,8 @@ class ViolinData(BaseChartData):
         # style
         self.color = "#FFDF00"
         self.alpha = 1
-        self.edit_panel = None
         self.color_button = None
         self.opacity_box = None
-
-    def export_to_list(self) -> list:
-        return []
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
@@ -550,7 +548,6 @@ class LineData(BaseChartData):
         self.color = "silver"
         self.linewidth = 1.5
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linewidth_box = None
         self.linestyle_box = None
@@ -563,10 +560,10 @@ class LineData(BaseChartData):
 
     def export_to_list(self) -> list:
         outlist = ["Line Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\n"]
         for i in range(len(self.x_values)):
-            outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
+            outlist.append(f"{self.x_values[i]}\t{self.y_values[i]}\n")
         return outlist
 
     def create_edit_panel(self):
@@ -620,17 +617,16 @@ class ArcData(BaseChartData):
         self.linestyle = "solid"
         self.linewidth = 1.5
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linewidth_box = None
         self.linestyle_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Arc Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\twidth\theight\tstart angle\tend angle\n",
-                   "{}\t{}\t{}\t{}\t{}\t{}\n".format(self.x_center, self.y_center, self.width, self.height,
-                                                     self.start_angle, self.end_angle)]
+                   f"{self.x_center}\t{self.y_center}\t{self.width}\t{self.height}\t{self.start_angle}\t"
+                   f"{self.end_angle}\n"]
         return outlist
 
     def create_edit_panel(self):
@@ -672,18 +668,22 @@ class AnnotationData(BaseChartData):
         self.bbox = None
         self.arrowprops = None
         self.size = "medium"
-        self.edit_panel = None
 
     def export_to_list(self) -> list:
         outlist = ["Annotation Data\n",
-                   "Name\t{}\n".format(self.name),
-                   "x\ty\tAnnotation\n"]
+                   f"Name\t{self.name}\n"]
+        outstr = "x\ty\t"
+        if self.end_x is not None:
+            outstr += "endx\tendy\t"
+        outstr += "Annotation\n"
+        outlist.append(outstr)
         for i in range(len(self.annotations)):
-            outlist.append("{}\t{}\t{}\n".format(self.x[i], self.y[i], self.annotations[i]))
+            outstr = f"{self.x[i]}\t{self.y[i]}\t"
+            if self.end_x is not None:
+                outstr += f"{self.end_x[i]}\t{self.end_y[i]}\t"
+            outstr += f"{self.annotations[i]}\n"
+            outlist.append(outstr)
         return outlist
-
-    def create_edit_panel(self):
-        return self.edit_panel
 
 
 class RectangleData(BaseChartData):
@@ -700,13 +700,6 @@ class RectangleData(BaseChartData):
         self.edge_color = "black"
         self.zorder = 1
         self.clip = True
-        self.edit_panel = None
-
-    def export_to_list(self) -> list:
-        return []
-
-    def create_edit_panel(self):
-        return self.edit_panel
 
 
 class MARCLegendData(BaseChartData):
@@ -719,13 +712,6 @@ class MARCLegendData(BaseChartData):
         self.legend_weights = (0.1, 0.01, 0.001)        # fixed values
         self.legend_formats = ("0.1f", "0.2f", "0.3f")  # fixed values
         self.scatter = None
-        self.edit_panel = None
-
-    def export_to_list(self) -> list:
-        return ""
-
-    def create_edit_panel(self):
-        return self.edit_panel
 
 
 class FillDataX(BaseChartData):
@@ -737,7 +723,6 @@ class FillDataX(BaseChartData):
         self.x1_values = None
         self.x2_values = None
         self.y_values = None
-        self.edit_panel = None
         # style
         self.color = "silver"
         self.zorder = 0
@@ -750,9 +735,6 @@ class FillDataX(BaseChartData):
     def link_style(self, other_fill):
         self.linked_style = other_fill
         other_fill.is_linked = True
-
-    def export_to_list(self) -> list:
-        return []
 
     def create_edit_panel(self):
         if self.is_linked:
@@ -790,22 +772,12 @@ class ColorGrid(BaseChartData):
         self.x_values = None
         self.y_values = None
         self.z_values = None
-        self.edit_panel = None
         self.label_name = ""
         # style
         self.colormap = "RdYlGn"
         self.map_box = None
         self.rev_map_box = None
         self.label_box = None
-
-    def export_to_list(self) -> list:
-        # outlist = ["Line Data\n",
-        #            "Name\t{}\n".format(self.name),
-        #            "x\ty\n"]
-        # for i in range(len(self.x_values)):
-        #     outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
-        # return outlist
-        return []
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
@@ -825,10 +797,6 @@ class ColorGrid(BaseChartData):
         if self.rev_map_box.isChecked():
             self.colormap += "_r"
         self.label_name = self.label_box.text()
-
-    def style_text(self) -> str:
-        # return find_color_name(self.color)
-        return ""
 
 
 # ---------- Chart Caption Classes ---------- #
