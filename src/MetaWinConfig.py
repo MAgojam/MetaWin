@@ -53,7 +53,7 @@ def default_config() -> dict:
     }
 
 
-def validate_config(key, value):
+def validate_config(key: str, value: str):
     """
     validate whether the imported value is valid for the specified key, including
     conversion from strings when appropriate
@@ -107,14 +107,14 @@ def export_config(main_window) -> None:
     """
     try:
         with open(CONFIG_FILE, "w") as outfile:
-            outfile.write("language={}\n".format(MetaWinLanguage.current_language))
-            outfile.write("output decimals={:d}\n".format(main_window.output_decimals))
-            outfile.write("data decimals={:d}\n".format(main_window.data_decimals))
-            outfile.write("filtered row color={}\n".format(main_window.filtered_row_color))
-            outfile.write("filtered col color={}\n".format(main_window.filtered_col_color))
-            outfile.write("auto update check={}\n".format(main_window.auto_update_check))
-            outfile.write("alpha={}\n".format(main_window.alpha))
-            outfile.write("confidence interval distribution={}\n".format(main_window.confidence_interval_dist))
-            outfile.write("color name space={}\n".format(MetaWinCharts.color_name_space))
+            outfile.write(f"language={MetaWinLanguage.current_language}\n")
+            outfile.write(f"output decimals={main_window.output_decimals:d}\n")
+            outfile.write(f"data decimals={main_window.data_decimals:d}\n")
+            outfile.write(f"filtered row color={main_window.filtered_row_color}\n")
+            outfile.write(f"filtered col color={main_window.filtered_col_color}\n")
+            outfile.write(f"auto update check={main_window.auto_update_check}\n")
+            outfile.write(f"alpha={main_window.alpha}\n")
+            outfile.write(f"confidence interval distribution={main_window.confidence_interval_dist}\n")
+            outfile.write(f"color name space={MetaWinCharts.color_name_space}\n")
     except IOError:
         pass

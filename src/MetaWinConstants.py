@@ -135,6 +135,7 @@ help_index = {
 title_label_style = "font-weight: bold; font-size: 16px"
 
 # full reference and citation list
+# format is  key: ["full citation", "reference form", "DOI"]
 references = {
     "Adams_et_1997": ["Adams, D.C., J. Gurevitch, and M.S. Rosenberg (1997) Resampling tests for meta-analysis of "
                       "ecological data. <em>Ecology</em> 78:1277&ndash;1283.", "Adams <em>et al.</em> (1997)",

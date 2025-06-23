@@ -36,9 +36,10 @@ class EffectSizeOptions:
         self.polarity = None
 
     def report_choices(self):
-        output_blocks = [["<h3>{}</h3>".format(get_text("Calculate Effect Sizes"))]]
+        output_blocks = [[f"<h3>{get_text("Calculate Effect Sizes")}</h3>"]]
         if self.effect_size is not None:
-            output = ["{}".format(self.effect_size.name)]
+            output = [self.effect_size.name]
+            # output = ["{}".format(self.effect_size.name)]
 
             cite_list = []
             for c in self.effect_size.citations:
@@ -47,7 +48,7 @@ class EffectSizeOptions:
                 s = get_text("Citations")
             else:
                 s = get_text("Citation")
-            output.append("→ {}: ".format(s) + ", ".join(cite_list))
+            output.append(f"→ {s}: " + ", ".join(cite_list))
             output_blocks.append(output)
             output = [get_text("Data obtained from columns:")]
             if self.effect_size.name in ("Hedges\' d", "ln Response Ratio"):

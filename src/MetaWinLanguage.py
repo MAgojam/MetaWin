@@ -496,6 +496,6 @@ def get_text(key: str) -> str:
         text = LANGUAGE_DICTIONARY[current_language][key]
     except KeyError:
         text = key
-        print("(Internal Warning) {} Dictionary Missing Text: {}".format(current_language, key))
+        print(f"(Internal Warning) {current_language} Dictionary Missing Text: {key}")
 
     return text
