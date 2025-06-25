@@ -198,7 +198,7 @@ def add_figure_edit_panel(sender):
 
 
 # --- widgets for graph editing --- #
-def add_chart_color_button(title, color, def_color="black"):
+def add_chart_color_button(title, color, def_color="black", alpha=1):
     label = QLabel(title)
     no_color_box = QCheckBox(get_text("No fill color"))
     if color == "none":
@@ -207,7 +207,8 @@ def add_chart_color_button(title, color, def_color="black"):
     else:
         no_color_box.setChecked(False)
         button = ColorButton(color)
-    return button, label, no_color_box
+    opacity_box, opacity_label = add_chart_opacity(get_text("Opacity"), alpha)
+    return button, label, no_color_box, opacity_box, opacity_label
 
 
 def add_chart_line_width(title, linewidth):
@@ -245,14 +246,31 @@ def add_chart_marker_style(title, style, options):
     return style_box, label
 
 
-def add_chart_line_edits(color_text, color, width_text, width, style_text, style, line_styles):
-    color_label, color_button, _ = add_chart_color_button(color_text, color)
-    width_label, width_box = add_chart_line_width(width_text, width)
-    style_label, style_box = add_chart_line_style(style_text, style, line_styles)
-    return color_label, color_button, width_label, width_box, style_label, style_box
+def add_chart_opacity(title, alpha):
+    label = QLabel(title)
+    alpha_box = QLineEdit()
+    alpha_box.setText(str(alpha))
+    alpha_box.setValidator(QDoubleValidator(0, 1, 2))
+    return alpha_box, label
 
 
-def add_chart_colormap_edits(colormap: str, options, labelstr: str):
+def add_chart_line_edits(color_text, color, width_text, width, style_text, style, line_styles,
+                         single_width: bool = True, min_text: str = "", min_width=1, max_text: str = "", max_width=10):
+    color_button, color_label, _, _, _ = add_chart_color_button(color_text, color)
+    if single_width:
+        width_box, width_label = add_chart_line_width(width_text, width)
+        min_width_box, min_width_label = None, None
+        max_width_box, max_width_label = None, None
+    else:
+        width_box, width_label = None, None
+        min_width_box, min_width_label = add_chart_line_width(min_text, min_width)
+        max_width_box, max_width_label = add_chart_line_width(max_text, max_width)
+    style_box, style_label = add_chart_line_style(style_text, style, line_styles)
+    return (color_button, color_label, width_box, width_label, style_box, style_label, min_width_box,min_width_label,
+            max_width_box, max_width_label)
+
+
+def add_chart_colormap_edits(colormap: str, options, labelstr: str = "", inc_label: bool = True):
     rev_map_box = QCheckBox(get_text("Reverse"))
     if colormap.endswith("_r"):
         rev_map_box.setChecked(True)
@@ -265,9 +283,13 @@ def add_chart_colormap_edits(colormap: str, options, labelstr: str):
     index = list(options.values()).index(colormap)
     map_box.setCurrentIndex(index)
 
-    label = QLabel(get_text("Color Scheme Label"))
-    label_box = QLineEdit()
-    label_box.setText(labelstr)
+    if inc_label:
+        label = QLabel(get_text("Color Scheme Label"))
+        label_box = QLineEdit()
+        label_box.setText(labelstr)
+    else:
+        label = None
+        label_box = None
 
     return map_box, rev_map_box, label, label_box
 

@@ -22,7 +22,7 @@ class MetaWinAbout(QDialog):
         citation_label = QLabel(MetaWinConstants.mw3_citation)
         citation_label.setWordWrap(True)
         citation_label.setOpenExternalLinks(True)
-        website_label = QLabel("<a href=\"{0}\">{0}</a>".format(MetaWinConstants.website))
+        website_label = QLabel(f'<a href="{MetaWinConstants.website}">{MetaWinConstants.website}</a>')
         website_label.setOpenExternalLinks(True)
 
         splash_frame = QFrame()

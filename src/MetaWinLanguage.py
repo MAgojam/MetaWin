@@ -31,8 +31,10 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Bootstrap Mean Effect Size(s)": "Bootstrap Mean Effect Size(s)",
                       "bootstrap_caption": " Confidence intervals from a boostrap ({:,} iterations) procedure, "
                                            "following {}, are indicated by {}; the bias-corrected bootstrap interval "
-                                           "is indicated by {}.",
+                                           "is indicated by {}; and the full distribution of the bootstrapped "
+                                           "values are indicated by the {} raindrop.",
                       "Bootstrap Confidence Limits": "Bootstrap Confidence Limits",
+                      "Bootstrap Distribution": "Bootstrap Distribution",
                       "Bias-corrected Bootstrap Confidence Limits": "Bias-corrected Bootstrap Confidence Limits",
                       "Calculate Effect Sizes": "Calculate Effect Sizes",
                       "Cancel": "Cancel",
@@ -147,15 +149,25 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                           "Forest plot of individual effect sizes for each study, as well as the overall mean.",
                       "study_forest_plot_extra": " Study effect sizes are indicated by {}, with the corresponding line "
                                                  "the {:0.0%} confidence interval based on a Normal distribution.",
+                      "forest plot scaled means": " The size of the marker is proportional to the study weight.",
+                      "forest plot thick": " The height (thickness) of the line indicating the confidence interval is "
+                                           "proportional to the study weight, after {}.",
+                      "rainforest plot": " The oblong shapes illustrate the probability density around the effect size, "
+                                         "represented by both the shape and color of the raindrop, after {}.",
                       "basic_analysis_forest_plot_extra": " Study and mean effect sizes are indicated by {}, with the "
                                                           "corresponding line the {:0.0%} confidence interval based on "
                                                           "{}.",
+                      "forest mean scale": " The mean effect size is scaled as the average weight across the studies.",
                       "mid_forest_plot_caption": " Mean effect sizes are indicated by {}, with the corresponding "
                                                  "line the {:0.0%} confidence interval based on {}.",
                       "normal_ci_dist": "the Normal distribution",
                       "t_ci_dist": "Student's t distribution",
                       "mixed_ci_dist": "Student's t distribution for the mean and the Normal distribution for the "
                                        "individual studies",
+                      "Forest Plot Style": "Forest Plot Style",
+                      "Plain": "Plain",
+                      "Scaled Effect Size": "Scaled Effect Size",
+                      "Thick": "Thick",
                       "forest_plot_common_caption1": " Effect size measured as {}. The vertical {} represents no "
                                                      "effect.",
                       "forest_plot_common_caption2": " Effect size measured as {}. The vertical {} "
@@ -183,7 +195,7 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Global Results": "Global Results",
                       "Graph": "Graph",
                       "Graph Cumulative Mean Effect (Forest Plot)": "Graph Cumulative Mean Effect (Forest Plot)",
-                      "Graph Effect Sizes and Mean (Forest Plot)": "Graph Effect Sizes and Mean (Forest Plot)",
+                      "Graph Effect Sizes and Mean (Forest Plot)": "Graph Effect Sizes and Mean",
                       "Graph Jackknife Means (Forest Plot)": "Graph Jackknife Means (Forest Plot)",
                       "Graph Mean Effect Sizes (Forest Plot)": "Graph Mean Effect Sizes (Forest Plot)",
                       "Graph Regression": "Graph Regression",
@@ -227,6 +239,7 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                                                "with the summary repeated with each study removed, one by one.",
                       "Language": "Language",
                       "Line of No Effect": "Line of No Effect",
+                      "Lines of No Effect and Weight": "Lines of No Effect and Weight",
                       "Linear Meta-Regression Analysis": "Linear Meta-Regression Analysis",
                       "Linear Regression": "Linear Regression",
                       "Load Data": "Load Data",
@@ -236,6 +249,7 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Prediction Limits": "Prediction Limits",
                       # "Lower Prediction Limit": "Lower Prediction Limit",
                       "Pseudo-Confidence Limits": "Pseudo-Confidence Limits",
+                      "MARC Plot": "MARC Plot",
                       "Markdown": "Markdown",
                       "marker_style_text": "{} {}{} with a {} border",
                       "marker_style_open_text": "open {}{} with a {} border",
@@ -250,6 +264,11 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "minimal effect size": "minimal effect size",
                       "Model": "Model",
                       "Model Results": "Model Results",
+                      "Negative Effect": "Negative Effect",
+                      "Positive Effect": "Positive Effect",
+                      "Negative Background": "Negative Background",
+                      "Opacity": "Opacity",
+                      "Positive Background": "Positive Background",
                       "nest_structure_error": "You must choose at least two variable to indicate nesting structure.",
                       "Nested Group Analysis": "Nested Group Meta-Analysis",
                       "Nested Groups": "Nested Groups",
@@ -416,6 +435,7 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Vertical Axis Tick Labels": "Vertical Axis Tick Labels",
                       "Vertical Axis Zero Line": "Vertical Axis Zero Line",
                       "Warning": "Warning",
+                      "Relative Weight": "Relative Weight",
                       "Weighted Count": "Weighted Count",
                       "Weighted Histogram": "Weighted Histogram",
                       "Weighting": "Weighting",
@@ -423,7 +443,33 @@ ENGLISH_DICTIONARY = {"error_not_text_file": "{} does not appear to be a text fi
                       "Within": "Within",
                       "You are running the most current version available":
                           "You are running the most current version available",
-                      }
+                      "Size": "Size",
+                      "Max Size": "Max Size",
+                      "Min Size": "Min Size",
+                      "Max Width": "Max Width",
+                      "Min Width": "Min Width",
+                      "Rainforest": "Rainforest",
+                      "PDF Raindrops": "PDF Raindrops",
+                      "Plain Forest Plot": "Plain Forest Plot",
+                      "Scaled Effect Size Forest Plot": "Scaled Effect Size Forest Plot",
+                      "Thick Forest Plot": "Thick Forest Plot",
+                      "Rainforest Plot": "Rainforest Plot",
+                      "Meta Analytic Rain Cloud Plot": "Meta-Analytic Rain Cloud Plot",
+                      "SUMMARY OF THE EVIDENCE:": "SUMMARY OF THE EVIDENCE:",
+                      "MARC_summary_label": "Average effect = {}\nWeight 1.0",
+                      "MARC_point_annotation": "One out of 10,000+ possible values of the true effect size,\nbased "
+                                               "on the existing evidence.\n{} of the values fall between {} and "
+                                               "{},\nwith an average value of {}.",
+                      "Meta Analytic Rain Cloud Plot (v1)": "Meta-Analytic Rain Cloud Plot (v1)",
+                      "Meta Analytic Rain Cloud Plot (v2)": "Meta-Analytic Rain Cloud Plot (v2)",
+                      "marc_caption1": "Meta-analytic rain cloud plot of effect sizes for each study{}. Effect size "
+                                       "is indicated by position on the horizontal axis and the relative weight of "
+                                       "the study is indicated by both the position on the vertical axis and the size "
+                                       "of the marker.",
+                      "marc_caption2": " Other plausible values of the true effect size are simulated based on the "
+                                       "existing evidence and uncertainty and displayed as a cloud of small points "
+                                       "around the marker of the mean."
+}
 
 # TEST_DICTIONARY = {"About Localization": "About Localization",
 #                    "About MetaWin": "Dis Here Be MetaWin",
@@ -450,6 +496,6 @@ def get_text(key: str) -> str:
         text = LANGUAGE_DICTIONARY[current_language][key]
     except KeyError:
         text = key
-        print("(Internal Warning) {} Dictionary Missing Text: {}".format(current_language, key))
+        print(f"(Internal Warning) {current_language} Dictionary Missing Text: {key}")
 
     return text

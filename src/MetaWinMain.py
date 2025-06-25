@@ -141,6 +141,9 @@ class MainWindow(QMainWindow):
         draw_forest_action = QAction(QIcon(MetaWinConstants.forest_plot_icon), get_text("Forest Plot"), self)
         draw_forest_action.triggered.connect(self.draw_forest_plot)
         draw_menu.addAction(draw_forest_action)
+        draw_marc_action = QAction(QIcon(MetaWinConstants.marc_plot_icon), get_text("MARC Plot"), self)
+        draw_marc_action.triggered.connect(self.draw_marc_plot)
+        draw_menu.addAction(draw_marc_action)
         draw_normal_quantile_action = QAction(QIcon(MetaWinConstants.normal_quantile_icon),
                                               get_text("Normal Quantile Plot"), self)
         draw_normal_quantile_action.triggered.connect(self.draw_normal_quantile_plot)
@@ -835,6 +838,13 @@ class MainWindow(QMainWindow):
     def draw_forest_plot(self) -> None:
         if self.data is not None:
             chart_data = MetaWinDraw.draw_forest_dialog(self, self.data, self.last_effect, self.last_var, self.alpha)
+            if chart_data is not None:
+                self.show_figure(chart_data)
+                self.main_area.setCurrentIndex(2)
+
+    def draw_marc_plot(self) -> None:
+        if self.data is not None:
+            chart_data = MetaWinDraw.draw_marc_dialog(self, self.data, self.last_effect, self.last_var, self.alpha)
             if chart_data is not None:
                 self.show_figure(chart_data)
                 self.main_area.setCurrentIndex(2)

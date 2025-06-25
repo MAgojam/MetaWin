@@ -9,11 +9,11 @@ from collections import namedtuple
 
 mean_data_tuple = namedtuple("mean_data_tuple", ["name", "order", "n", "mean", "median", "variance", "avg_var",
                                                  "lower_ci", "upper_ci", "lower_bs_ci", "upper_bs_ci", "lower_bias_ci",
-                                                 "upper_bias_ci"])
+                                                 "upper_bias_ci", "bootstrapped_means"])
 
 MAJOR_VERSION = 3
-MINOR_VERSION = 0
-PATCH_VERSION = 17
+MINOR_VERSION = 1
+PATCH_VERSION = 0
 
 # validity check when fetching value from data matrix
 VALUE_NUMBER = 0
@@ -69,6 +69,7 @@ scatter_icon = resource_path(icon_path + "draw-points@256px.png")
 histogram_icon = resource_path(icon_path + "charts-filled@256px.png")
 radial_plot_icon = resource_path(icon_path + "draw-radial-plot@256px.png")
 forest_plot_icon = resource_path(icon_path + "chart-forest-plot@256px.png")
+marc_plot_icon = resource_path(icon_path + "custom-draw-marc@256px.png")
 normal_quantile_icon = resource_path(icon_path + "letter-z-2@256px.png")
 norm_dist_icon = resource_path(icon_path + "letter-z-2@256px.png")
 t_dist_icon = resource_path(icon_path + "letter-t@256px.png")
@@ -116,6 +117,7 @@ help_index = {
     "jackknife_analysis": resource_path(doc_path + "metawin_help.html#jackknife_analysis", True),
     "linear_analysis": resource_path(doc_path + "metawin_help.html#linear_analysis", True),
     "localization": resource_path(doc_path + "metawin_help.html#localization", True),
+    "marc_plot": resource_path(doc_path + "metawin_help.html#marc_plot", True),
     "metacalc": resource_path(doc_path + "metacalc_help.html", True),
     "metawin": resource_path(doc_path + "metawin_help.html", True),
     "nested_analysis": resource_path(doc_path + "metawin_help.html#nested_analysis", True),
@@ -133,10 +135,15 @@ help_index = {
 title_label_style = "font-weight: bold; font-size: 16px"
 
 # full reference and citation list
+# format is  key: ["full citation", "reference form", "DOI"]
 references = {
     "Adams_et_1997": ["Adams, D.C., J. Gurevitch, and M.S. Rosenberg (1997) Resampling tests for meta-analysis of "
                       "ecological data. <em>Ecology</em> 78:1277&ndash;1283.", "Adams <em>et al.</em> (1997)",
                       "10.1890/0012-9658(1997)078[1277:RTFMAO]2.0.CO;2"],
+
+    "Barrowman_Myers_2003": ["Barrowman, N.J., and R.A. Myers (2003) Raindrop plots: A new way to display collections "
+                             "of likelihoods and distributions. <em>American Statistician</em> "
+                             "57(4):268&ndash;274.", "Barrowman and Myers (2003)", "10.1198/0003130032369"],
 
     "Begg_1994": ["Begg, C.B. (1994) Publication bias. Pp. 399-409 in <em>The Handbook of Research Synthesis</em>, "
                   "H. Cooper and L.V. Hedges, eds. Sage, New York.", "Begg (1994)", ""],
@@ -179,6 +186,16 @@ references = {
 
     "Fisher_1928": ["Fisher, R.A. (1928) <em>Statistical methods for research workers</em> (2nd edition). "
                     "Oliver and Boyd, London.", "Fisher (1928)", ""],
+
+    "Fitzgerald_et_2025": ["Fitzgerald, K.G., D. Khella, A. Charles, and E. Tipton (2025) Meta-analytic rain cloud "
+                           "plots: Improving evidence communication through data visualization design principles. "
+                           "<em>Research Synthesis Methods</em> 16:343&ndash;382.",
+                           "Fitzgerald <em>et al.</em> (2025)", "10.1017/rsm.2025.4"],
+
+    "Fitzgerald_Tipton_2022": ["Fitzgerald, K.G., and E. Tipton (2022) The meta-analytic rain cloud plot: A new "
+                               "approach to visualizing clearinghouse data. <em>Journal of Research Educational "
+                               "Effectiveness</em> 15(4):848&ndash;875.",
+                               "Fitzgerald and Tipton (2022)", "10.1080/19345747.2022.2031366"],
 
     "Galbraith_1988": ["Galbraith, R.F. (1988) A note on graphical presentation of estimated odds ratios from "
                        "several clinical trials. <em>Statistics in Medicine</em> 7:889&ndash;894.",
@@ -286,6 +303,11 @@ references = {
 
     "Rosenthal_1991": ["Rosenthal, R. (1991) <em>Meta-analytic procedures for social research<em> (revised edition). "
                        "Sage, Newbury Park, CA.", "Rosenthal (1991)", ""],
+
+    "Schild_Voracek_2014": ["Schild, A.H.E., and M. Voracek (2014) Finding your way out of the forest without a "
+                            "trail of bread crumbs: Development and evaluation of two novel displays of forest plots. "
+                            "<em>Research Synthesis Methods</em> 6:74&ndash;86.", "Schild and Voracek (2014)",
+                            "10.1002/jrsm.1125"],
 
     "Sokal_Rohlf_1995": ["Sokal, R.R., and F.J. Rohlf (1995) <em>Biometry</em> (3rd edition). Freeman, San Francisco.",
                          "Sokal and Rohlf (1995)", ""],

@@ -3,11 +3,15 @@ Module for creating figures using the matplotlib backend for Qt
 """
 
 import math
+from numbers import Number
 from typing import Optional, Union
 
+import matplotlib.patches
 from matplotlib import patches
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from matplotlib.collections import QuadMesh
+from matplotlib.lines import Line2D
 # the following import is necessary to force pyinstaller to include these backends for vector output when packaging
 from matplotlib.backends import backend_svg, backend_ps, backend_pgf, backend_pdf
 from matplotlib.colors import XKCD_COLORS, hex2color, CSS4_COLORS
@@ -25,6 +29,16 @@ color_name_space = "xkcd"
 WEIGHT_NONE = 0
 WEIGHT_INVVAR = 1
 WEIGHT_N = 2
+
+# style options for forest plots
+FP_STYLE_PLAIN = 0
+FP_STYLE_SCALED = 1
+FP_STYLE_THICK = 2
+FP_STYLE_RAINFOREST = 3
+FOREST_STEP = 10
+MARC_STYLE_0 = 10  # this is for plotting studies only, without the mean
+MARC_STYLE_1 = 11  # version 1, when the mean is included in y-axis scaling (i.e., y-axis ranges from 0 to 1)
+MARC_STYLE_2 = 12  # version 2, when the mean is excluded from y-axis scaling
 
 LINE_STYLES = ("solid", "dashed", "dotted", "dashdot")
 # MARKER_STYLES = {"point": ".", "circle": "o", "downward triangle": "v", "upward triangle": "^",
@@ -146,6 +160,23 @@ class BaseChartData:
     def __init__(self):
         self.name = ""
         self.visible = True
+        self.alt_axes = None
+        self.edit_panel = None
+
+
+    @staticmethod
+    def export_to_list(self) -> list:
+        # default - overload when necessary
+        return []
+
+    @staticmethod
+    def style_text() -> str:
+        # default - overload when necessary
+        return ""
+
+    def create_edit_panel(self):
+        # default - overload when necessary
+        return self.edit_panel
 
 
 class ScatterData(BaseChartData):
@@ -159,13 +190,17 @@ class ScatterData(BaseChartData):
         # scatter point style
         self.marker = "o"
         self.color = "#1f77b4"
+        self.alpha = 1
         self.edgecolors = "#1f77b4"
         self.size = 36
+        self.single_size = True
+        self.min_size = 1
+        self.max_size = 100
         self.linewidths = 1.5
         self.linestyle = "dotted"
         self.label = ""
+        self.alpha = 1
         self.zorder = 0
-        self.edit_panel = None
         self.edgecolor_button = None
         self.linewidth_box = None
         self.linestyle_box = None
@@ -173,21 +208,26 @@ class ScatterData(BaseChartData):
         self.size_box = None
         self.marker_box = None
         self.no_fill_box = None
+        self.min_size_box = None
+        self.max_size_box = None
+        self.opacity_box = None
+        self.weights = None
+        self.max_weight, self.min_weight = 0, 0
 
     def export_to_list(self) -> list:
         outlist = ["Scatter Plot Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\n"]
         for i in range(len(self.x)):
-            outlist.append("{}\t{}\n".format(self.x[i], self.y[i]))
+            outlist.append(f"{self.x[i]}\t{self.y[i]}\n")
         return outlist
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
 
-        self.color_button, color_label, self.no_fill_box = MetaWinWidgets.add_chart_color_button(get_text("Color"),
-                                                                                                 self.color,
-                                                                                                 self.edgecolors)
+        (self.color_button, color_label, self.no_fill_box, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, self.edgecolors,
+                                                                self.alpha)
         self.no_fill_box.clicked.connect(self.no_fill_clicked)
         self.no_fill_clicked()
         edit_layout.addWidget(color_label, 0, 0)
@@ -198,21 +238,34 @@ class ScatterData(BaseChartData):
         edit_layout.addWidget(marker_label, 0, 1)
         edit_layout.addWidget(self.marker_box, 1, 1)
 
-        self.size_box, size_label = MetaWinWidgets.add_chart_marker_size("Size", self.size)
-        edit_layout.addWidget(size_label, 0, 2)
-        edit_layout.addWidget(self.size_box, 1, 2)
+        if self.single_size:
+            self.size_box, size_label = MetaWinWidgets.add_chart_marker_size(get_text("Size"), self.size)
+            edit_layout.addWidget(size_label, 0, 2)
+            edit_layout.addWidget(self.size_box, 1, 2)
+            col_adj = 0
+        else:
+            self.min_size_box, min_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Min Size"),
+                                                                                     self.min_size)
+            edit_layout.addWidget(min_size_label, 0, 2)
+            edit_layout.addWidget(self.min_size_box, 1, 2)
+            self.max_size_box, max_size_label = MetaWinWidgets.add_chart_marker_size(get_text("Max Size"),
+                                                                                     self.max_size)
+            edit_layout.addWidget(max_size_label, 0, 3)
+            edit_layout.addWidget(self.max_size_box, 1, 3)
+            col_adj = 1
 
-        (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
-                                                                                get_text("Edge Width"), self.linewidths,
-                                                                                get_text("Edge Style"), self.linestyle,
-                                                                                LINE_STYLES)
-        edit_layout.addWidget(edgecolor_label, 0, 3)
-        edit_layout.addWidget(self.edgecolor_button, 1, 3)
-        edit_layout.addWidget(width_label, 0, 4)
-        edit_layout.addWidget(self.linewidth_box, 1, 4)
-        edit_layout.addWidget(style_label, 0, 5)
-        edit_layout.addWidget(self.linestyle_box, 1, 5)
+        edit_layout.addWidget(opacity_label, 0, 3+col_adj)
+        edit_layout.addWidget(self.opacity_box, 1, 3+col_adj)
+        (self.edgecolor_button, edgecolor_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolors,
+                                                           get_text("Edge Width"), self.linewidths,
+                                                           get_text("Edge Style"), self.linestyle, LINE_STYLES)
+        edit_layout.addWidget(edgecolor_label, 0, 4+col_adj)
+        edit_layout.addWidget(self.edgecolor_button, 1, 4+col_adj)
+        edit_layout.addWidget(width_label, 0, 5+col_adj)
+        edit_layout.addWidget(self.linewidth_box, 1, 5+col_adj)
+        edit_layout.addWidget(style_label, 0, 6+col_adj)
+        edit_layout.addWidget(self.linestyle_box, 1, 6+col_adj)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
@@ -231,7 +284,12 @@ class ScatterData(BaseChartData):
             self.color = "none"
         else:
             self.color = self.color_button.color
-        self.size = float(self.size_box.text())
+        if self.single_size:
+            self.size = float(self.size_box.text())
+        else:
+            self.min_size = float(self.min_size_box.text())
+            self.max_size = float(self.max_size_box.text())
+        self.alpha = float(self.opacity_box.text())
         self.marker = MARKER_STYLES[self.marker_box.currentText()]
 
     def style_text(self) -> str:
@@ -269,40 +327,40 @@ class HistogramData(BaseChartData):
         self.linewidth = 1
         self.linestyle = "solid"
         self.edgecolor = "black"
+        self.alpha = 1
         # style editing
-        self.edit_panel = None
         self.edgewidth_box = None
         self.edgestyle_box = None
         self.bar_color_button = None
         self.edge_color_button = None
+        self.opacity_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Histogram Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "count\tlower\tupper\n"]
         for i in range(len(self.counts)):
-            outlist.append("{}\t{}\t{}\n".format(self.counts[i], self.bins[i], self.bins[i+1]))
+            outlist.append(f"{self.counts[i]}\t{self.bins[i]}\t{self.bins[i+1]}\n")
         return outlist
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-        self.bar_color_button, label, _ = MetaWinWidgets.add_chart_color_button(get_text("Bar Color"), self.color)
+        (self.bar_color_button, label, _, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Bar Color"), self.color, alpha=self.alpha)
         edit_layout.addWidget(label, 0, 0)
         edit_layout.addWidget(self.bar_color_button, 1, 0)
-        (self.edge_color_button, color_label, self.edgewidth_box, width_label,
-         self.edgestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"),
-                                                                                self.edgecolor,
-                                                                                get_text("Edge Width"),
-                                                                                self.linewidth,
-                                                                                get_text("Edge Style"),
-                                                                                self.linestyle,
-                                                                                LINE_STYLES)
+        (self.edge_color_button, color_label, self.edgewidth_box, width_label, self.edgestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Edge Color"), self.edgecolor,
+                                                           get_text("Edge Width"), self.linewidth,
+                                                           get_text("Edge Style"), self.linestyle, LINE_STYLES)
         edit_layout.addWidget(color_label, 0, 1)
         edit_layout.addWidget(self.edge_color_button, 1, 1)
         edit_layout.addWidget(width_label, 0, 2)
         edit_layout.addWidget(self.edgewidth_box, 1, 2)
         edit_layout.addWidget(style_label, 0, 3)
         edit_layout.addWidget(self.edgestyle_box, 1, 3)
+        edit_layout.addWidget(opacity_label, 0, 4)
+        edit_layout.addWidget(self.opacity_box, 1, 4)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
@@ -312,6 +370,7 @@ class HistogramData(BaseChartData):
         self.linewidth = float(self.edgewidth_box.text())
         self.color = self.bar_color_button.color
         self.edgecolor = self.edge_color_button.color
+        self.alpha = float(self.opacity_box.text())
 
 
 class LabelData(BaseChartData):
@@ -322,18 +381,14 @@ class LabelData(BaseChartData):
         super().__init__()
         self.labels = None
         self.y_pos = None
-        self.edit_panel = None
 
     def export_to_list(self) -> list:
         outlist = ["Data Labels\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "Y-position\tLabel\n"]
         for i in range(len(self.labels)):
-            outlist.append("{}\t{}\n".format(self.y_pos[i], self.labels[i]))
+            outlist.append(f"{self.y_pos[i]}\t{self.labels[i]}\n")
         return outlist
-
-    def create_edit_panel(self):
-        return self.edit_panel
 
 
 class ForestCIData(BaseChartData):
@@ -349,41 +404,135 @@ class ForestCIData(BaseChartData):
         self.linestyle = "solid"
         self.color = "#1f77b4"
         self.linewidth = 1.5
+        self.single_width = True
+        self.min_width = 1
+        self.max_width = 10
+        self.weights = None
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linestyle_box = None
         self.linewidth_box = None
+        self.min_linewidth_box = None
+        self.max_linewidth_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Forest Plot CI Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "lower\tupper\ty\n"]
         for i in range(len(self.y)):
-            outlist.append("{}\t{}\t{}\n".format(self.min_x[i], self.max_x[i], self.y[i]))
+            outlist.append(f"{self.min_x[i]}\t{self.max_x[i]}\t{self.y[i]}\n")
         return outlist
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
         (self.color_button, color_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                get_text("Width"), self.linewidth,
-                                                                                get_text("Style"), self.linestyle,
-                                                                                LINE_STYLES)
+         self.linestyle_box, style_label, self.min_linewidth_box, min_width_label, self.max_linewidth_box,
+         max_width_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
+                                                                get_text("Width"), self.linewidth,
+                                                                get_text("Style"), self.linestyle,
+                                                                LINE_STYLES,
+                                                                single_width=self.single_width,
+                                                                min_text=get_text("Min Width"),
+                                                                min_width=self.min_width,
+                                                                max_text=get_text("Max Width"),
+                                                                max_width=self.max_width)
         edit_layout.addWidget(color_label, 0, 0)
         edit_layout.addWidget(self.color_button, 1, 0)
-        edit_layout.addWidget(width_label, 0, 1)
-        edit_layout.addWidget(self.linewidth_box, 1, 1)
-        edit_layout.addWidget(style_label, 0, 2)
-        edit_layout.addWidget(self.linestyle_box, 1, 2)
+        if self.single_width:
+            edit_layout.addWidget(width_label, 0, 1)
+            edit_layout.addWidget(self.linewidth_box, 1, 1)
+            adj = 0
+        else:
+            edit_layout.addWidget(min_width_label, 0, 1)
+            edit_layout.addWidget(self.min_linewidth_box, 1, 1)
+            edit_layout.addWidget(max_width_label, 0, 2)
+            edit_layout.addWidget(self.max_linewidth_box, 1, 2)
+            adj = 1
+        edit_layout.addWidget(style_label, 0, 2+adj)
+        edit_layout.addWidget(self.linestyle_box, 1, 2+adj)
         for i in range(edit_layout.columnCount()):
             edit_layout.setColumnStretch(i, 1)
         return self.edit_panel
 
     def update_style(self):
         self.linestyle = self.linestyle_box.currentText()
-        self.linewidth = float(self.linewidth_box.text())
+        if self.single_width:
+            self.linewidth = float(self.linewidth_box.text())
+        else:
+            self.min_width = float(self.min_linewidth_box.text())
+            self.max_width = float(self.max_linewidth_box.text())
         self.color = self.color_button.color
+
+
+class RainforestData(BaseChartData):
+    """
+    an object to contain data for drawing the density diagrams of Rainforest plots
+    """
+    def __init__(self):
+        super().__init__()
+        self.lower_cis = None
+        self.upper_cis = None
+        self.ys = None
+        self.means = None
+        self.vars = None
+        self.weights = None
+
+        # style
+        self.zorder = 0
+        self.colormap = "Blues"
+
+        self.map_box = None
+        self.rev_map_box = None
+
+    def create_edit_panel(self):
+        self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
+        self.map_box, self.rev_map_box, _, _ = MetaWinWidgets.add_chart_colormap_edits(self.colormap, COLORMAPS)
+        edit_layout.addWidget(self.rev_map_box, 0, 0)
+        edit_layout.addWidget(self.map_box, 1, 0)
+        for i in range(edit_layout.columnCount()):
+            edit_layout.setColumnStretch(i, 1)
+        return self.edit_panel
+
+    def update_style(self):
+        self.colormap = COLORMAPS[self.map_box.currentText()]
+        if self.rev_map_box.isChecked():
+            self.colormap += "_r"
+
+
+class ViolinData(BaseChartData):
+    """
+    an object to contain data for drawing bootstrap distributions
+    """
+    def __init__(self):
+        super().__init__()
+        self.bootstrap_data = None
+        self.ys = None
+
+        # style
+        self.color = "#FFDF00"
+        self.alpha = 1
+        self.color_button = None
+        self.opacity_box = None
+
+    def create_edit_panel(self):
+        self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
+        (self.color_button, color_label, _, self.opacity_box,
+         opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, alpha=self.alpha)
+
+        edit_layout.addWidget(color_label, 0, 0)
+        edit_layout.addWidget(self.color_button, 1, 0)
+        edit_layout.addWidget(opacity_label, 0, 1)
+        edit_layout.addWidget(self.opacity_box, 1, 1)
+        for i in range(edit_layout.columnCount()):
+            edit_layout.setColumnStretch(i, 1)
+        return self.edit_panel
+
+    def update_style(self):
+        self.color = self.color_button.color
+        self.alpha = float(self.opacity_box.text())
+
+    def style_text(self) -> str:
+        return find_color_name(self.color)
 
 
 class LineData(BaseChartData):
@@ -399,7 +548,6 @@ class LineData(BaseChartData):
         self.color = "silver"
         self.linewidth = 1.5
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linewidth_box = None
         self.linestyle_box = None
@@ -412,10 +560,10 @@ class LineData(BaseChartData):
 
     def export_to_list(self) -> list:
         outlist = ["Line Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\n"]
         for i in range(len(self.x_values)):
-            outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
+            outlist.append(f"{self.x_values[i]}\t{self.y_values[i]}\n")
         return outlist
 
     def create_edit_panel(self):
@@ -423,11 +571,11 @@ class LineData(BaseChartData):
             return self.edit_panel
         else:
             self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-            (self.color_button, color_label, self.linewidth_box, width_label,
-             self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                    get_text("Width"), self.linewidth,
-                                                                                    get_text("Style"), self.linestyle,
-                                                                                    LINE_STYLES)
+            (self.color_button, color_label, self.linewidth_box, width_label, self.linestyle_box, style_label,
+             _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
+                                                               get_text("Width"), self.linewidth,
+                                                               get_text("Style"), self.linestyle,
+                                                               LINE_STYLES)
             edit_layout.addWidget(color_label, 0, 0)
             edit_layout.addWidget(self.color_button, 1, 0)
             edit_layout.addWidget(width_label, 0, 1)
@@ -469,26 +617,25 @@ class ArcData(BaseChartData):
         self.linestyle = "solid"
         self.linewidth = 1.5
         self.zorder = 0
-        self.edit_panel = None
         self.color_button = None
         self.linewidth_box = None
         self.linestyle_box = None
 
     def export_to_list(self) -> list:
         outlist = ["Arc Data\n",
-                   "Name\t{}\n".format(self.name),
+                   f"Name\t{self.name}\n",
                    "x\ty\twidth\theight\tstart angle\tend angle\n",
-                   "{}\t{}\t{}\t{}\t{}\t{}\n".format(self.x_center, self.y_center, self.width, self.height,
-                                                     self.start_angle, self.end_angle)]
+                   f"{self.x_center}\t{self.y_center}\t{self.width}\t{self.height}\t{self.start_angle}\t"
+                   f"{self.end_angle}\n"]
         return outlist
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
         (self.color_button, color_label, self.linewidth_box, width_label,
-         self.linestyle_box, style_label) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color,
-                                                                                get_text("Width"), self.linewidth,
-                                                                                get_text("Style"), self.linestyle,
-                                                                                LINE_STYLES)
+         self.linestyle_box, style_label,
+         _, _, _, _) = MetaWinWidgets.add_chart_line_edits(get_text("Color"), self.color, get_text("Width"),
+                                                           self.linewidth, get_text("Style"), self.linestyle,
+                                                           LINE_STYLES)
         edit_layout.addWidget(color_label, 0, 0)
         edit_layout.addWidget(self.color_button, 1, 0)
         edit_layout.addWidget(width_label, 0, 1)
@@ -514,18 +661,57 @@ class AnnotationData(BaseChartData):
         self.annotations = []
         self.x = None
         self.y = None
-        self.edit_panel = None
+        self.end_x = None
+        self.end_y = None
+        self.halignment = "left"
+        self.valignment = "baseline"
+        self.bbox = None
+        self.arrowprops = None
+        self.size = "medium"
 
     def export_to_list(self) -> list:
         outlist = ["Annotation Data\n",
-                   "Name\t{}\n".format(self.name),
-                   "x\ty\tAnnotation\n"]
+                   f"Name\t{self.name}\n"]
+        outstr = "x\ty\t"
+        if self.end_x is not None:
+            outstr += "endx\tendy\t"
+        outstr += "Annotation\n"
+        outlist.append(outstr)
         for i in range(len(self.annotations)):
-            outlist.append("{}\t{}\t{}\n".format(self.x[i], self.y[i], self.annotations[i]))
+            outstr = f"{self.x[i]}\t{self.y[i]}\t"
+            if self.end_x is not None:
+                outstr += f"{self.end_x[i]}\t{self.end_y[i]}\t"
+            outstr += f"{self.annotations[i]}\n"
+            outlist.append(outstr)
         return outlist
 
-    def create_edit_panel(self):
-        return self.edit_panel
+
+class RectangleData(BaseChartData):
+    """
+    an object to draw an arbitrary rectangle on the plot
+    """
+    def __init__(self):
+        super().__init__()
+        self.x = None  # lower left corner
+        self.y = None  # lower left corner
+        self.height = None
+        self.width = None
+        self.face_color = "white"
+        self.edge_color = "black"
+        self.zorder = 1
+        self.clip = True
+
+
+class MARCLegendData(BaseChartData):
+    """
+    an object to contain the legend for MARC plots
+    """
+    def __init__(self):
+        super().__init__()
+        self.legend_scale = None
+        self.legend_weights = (0.1, 0.01, 0.001)        # fixed values
+        self.legend_formats = ("0.1f", "0.2f", "0.3f")  # fixed values
+        self.scatter = None
 
 
 class FillDataX(BaseChartData):
@@ -537,12 +723,12 @@ class FillDataX(BaseChartData):
         self.x1_values = None
         self.x2_values = None
         self.y_values = None
-        self.edit_panel = None
         # style
         self.color = "silver"
         self.zorder = 0
         self.alpha = 0.5
         self.color_button = None
+        self.opacity_box = None
         self.linked_style = None
         self.is_linked = False
 
@@ -550,30 +736,25 @@ class FillDataX(BaseChartData):
         self.linked_style = other_fill
         other_fill.is_linked = True
 
-    def export_to_list(self) -> list:
-        # outlist = ["Line Data\n",
-        #            "Name\t{}\n".format(self.name),
-        #            "x\ty\n"]
-        # for i in range(len(self.x_values)):
-        #     outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
-        # return outlist
-        return []
-
     def create_edit_panel(self):
         if self.is_linked:
             return self.edit_panel
         else:
             self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
-            self.color_button, color_label, _ = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color)
+            (self.color_button, color_label, _, self.opacity_box,
+             opacity_label) = MetaWinWidgets.add_chart_color_button(get_text("Color"), self.color, alpha=self.alpha)
 
             edit_layout.addWidget(color_label, 0, 0)
             edit_layout.addWidget(self.color_button, 1, 0)
+            edit_layout.addWidget(opacity_label, 0, 1)
+            edit_layout.addWidget(self.opacity_box, 1, 1)
             for i in range(edit_layout.columnCount()):
                 edit_layout.setColumnStretch(i, 1)
             return self.edit_panel
 
     def update_style(self):
         self.color = self.color_button.color
+        self.alpha = float(self.opacity_box.text())
         if self.linked_style is not None:
             self.linked_style.color = self.color
             self.linked_style.visible = self.visible
@@ -591,22 +772,12 @@ class ColorGrid(BaseChartData):
         self.x_values = None
         self.y_values = None
         self.z_values = None
-        self.edit_panel = None
         self.label_name = ""
         # style
         self.colormap = "RdYlGn"
         self.map_box = None
         self.rev_map_box = None
         self.label_box = None
-
-    def export_to_list(self) -> list:
-        # outlist = ["Line Data\n",
-        #            "Name\t{}\n".format(self.name),
-        #            "x\ty\n"]
-        # for i in range(len(self.x_values)):
-        #     outlist.append("{}\t{}\n".format(self.x_values[i], self.y_values[i]))
-        # return outlist
-        return []
 
     def create_edit_panel(self):
         self.edit_panel, edit_layout = MetaWinWidgets.add_figure_edit_panel(self)
@@ -627,31 +798,18 @@ class ColorGrid(BaseChartData):
             self.colormap += "_r"
         self.label_name = self.label_box.text()
 
-    def style_text(self) -> str:
-        # return find_color_name(self.color)
-        return ""
-
 
 # ---------- Chart Caption Classes ---------- #
 class NormalQuantileCaption:
     def __init__(self):
-        # self.upper_limit = None
         self.prediction_limit = None
-        # self.horizontal_mean = None
-        # self.vertical_mean = None
         self.means = None
         self.regression = None
         self.regression_scatter = None
 
     def __str__(self):
         regression_text = self.regression.style_text()
-        # upper_text = self.upper_limit.style_text()
-        # lower_text = self.lower_limit.style_text()
         style_text = get_text("normal_quantile_style").format(regression_text, self.prediction_limit.style_text())
-        # if upper_text == lower_text:
-        #     style_text = get_text("normal_quantile_style1").format(regression_text, upper_text)
-        # else:
-        #     style_text = get_text("normal_quantile_style2").format(regression_text, upper_text, lower_text)
         return get_text("normal_quantile_caption").format(get_citation("Wang_and_Bushman_1998")) + style_text + \
             create_reference_list(["Wang_and_Bushman_1998"], True)
 
@@ -740,6 +898,8 @@ class ForestPlotBaseCaption:
         self.medians = None
         self.boot = None
         self.bias = None
+        self.boot_violin = None
+        self.style = FP_STYLE_PLAIN
 
     def base_forest_plot_caption(self) -> str:
         """
@@ -766,17 +926,31 @@ class ForestPlotBaseCaption:
             text += get_text("forest_plot_median_caption").format(self.medians.style_text())
         if self.bootstrap_n is not None:
             citation = "Adams_et_1997"
-            text += get_text("bootstrap_caption").format(self.bootstrap_n, get_citation(citation),
-                                                         self.boot.style_text(), self.bias.style_text()) + \
-                    create_reference_list([citation], True)
+            text += (get_text("bootstrap_caption").format(self.bootstrap_n, get_citation(citation),
+                                                         self.boot.style_text(), self.bias.style_text(),
+                                                         self.boot_violin.style_text()) +
+                     create_reference_list([citation], True))
         return text
 
 
 class ForestPlotCaption(ForestPlotBaseCaption):
     def __str__(self):
-        return get_text("Forest plot of individual effect sizes for each study.") + \
-               self.base_forest_plot_caption() + \
-               get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha)
+        if self.style == FP_STYLE_SCALED:
+            scale_text = get_text("forest plot scaled means")
+            cite_text = ""
+        elif self.style == FP_STYLE_THICK:
+            scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        elif self.style == FP_STYLE_RAINFOREST:
+            scale_text = get_text("rainforest plot").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        else:
+            scale_text = ""
+            cite_text = ""
+        return (get_text("Forest plot of individual effect sizes for each study.") +
+                self.base_forest_plot_caption() +
+                get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha) + scale_text +
+                cite_text)
 
 
 class BasicAnalysisCaption(ForestPlotBaseCaption):
@@ -785,10 +959,31 @@ class BasicAnalysisCaption(ForestPlotBaseCaption):
             dist_text = get_text("normal_ci_dist")
         else:
             dist_text = get_text("mixed_ci_dist")
-        return get_text("Forest plot of individual effect sizes for each study, as well as the overall mean.") + \
-               self.base_forest_plot_caption() + \
-               get_text("basic_analysis_forest_plot_extra").format(self.means.style_text(), 1-self.alpha, dist_text) + \
-               self.extra_forest_plot_caption()
+
+        if self.style == FP_STYLE_SCALED:
+            scale_text = get_text("forest plot scaled means")
+            cite_text = ""
+        elif self.style == FP_STYLE_THICK:
+            scale_text = get_text("forest plot thick").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        elif self.style == FP_STYLE_RAINFOREST:
+            scale_text = get_text("rainforest plot").format(get_citation("Schild_Voracek_2014"))
+            cite_text = create_reference_list(["Schild_Voracek_2014"], True)
+        else:
+            scale_text = ""
+            cite_text = ""
+        if self.style == FP_STYLE_PLAIN:
+            mean_text = ""
+        else:
+            mean_text = get_text("forest mean scale")
+        # return (get_text("Forest plot of individual effect sizes for each study.") +
+        #         self.base_forest_plot_caption() +
+        #         get_text("study_forest_plot_extra").format(self.means.style_text(), 1-self.alpha) + scale_text +
+        #         cite_text)
+        return (get_text("Forest plot of individual effect sizes for each study, as well as the overall mean.") +
+                self.base_forest_plot_caption() +
+                get_text("basic_analysis_forest_plot_extra").format(self.means.style_text(), 1-self.alpha, dist_text) +
+                scale_text + mean_text + self.extra_forest_plot_caption() + cite_text)
 
 
 class GroupedAnalysisCaption(ForestPlotBaseCaption):
@@ -821,6 +1016,25 @@ class JackknifeAnalysisCaption(ForestPlotBaseCaption):
     def __str__(self):
         return get_text("jackknife_forest_plot") + self.base_forest_plot_caption() + self.mid_forest_plot_caption() + \
                self.extra_forest_plot_caption()
+
+
+class MARCPlotCaption:
+    def __init__(self):
+        self.e_label = ""
+        self.alpha = 0.05
+        self.style = MARC_STYLE_0
+        self.means = None
+        self.no_effect = None
+
+    def __str__(self):
+        if self.style == MARC_STYLE_0:
+            meanstr = ""
+            extrastr = ""
+        else:
+            meanstr = " and the mean"
+            extrastr = get_text("marc_caption2")
+        cite_text = create_reference_list(["Fitzgerald_Tipton_2022", "Fitzgerald_et_2025"], True)
+        return get_text("marc_caption1").format(meanstr) + extrastr + cite_text
 
 
 class FunnelPlotCaption:
@@ -868,13 +1082,15 @@ class ChartData:
 
     this will allow chart data exporting, as well as open up the possibility of figure editing
     """
-    def __init__(self, caption_type):
+    def __init__(self, caption_type, multi: Optional[str] = None):
         self.x_label = ""
         self.y_label = ""
+        self.multi = multi
         self.data = []
         # special adjustments
         self.suppress_y = False
         self.rescale_x = None
+        self.rescale_y = None
         self.invert_y = False
         # caption
         if caption_type == "normal quantile":
@@ -903,6 +1119,8 @@ class ChartData:
             self.caption = JackknifeAnalysisCaption()
         elif caption_type == "forest plot":
             self.caption = ForestPlotCaption()
+        elif caption_type == "marc plot":
+            self.caption = MARCPlotCaption()
         elif caption_type == "funnel plot":
             self.caption = FunnelPlotCaption()
         else:
@@ -912,7 +1130,9 @@ class ChartData:
         return str(self.caption)
 
     def add_scatter(self, name: str, x_data, y_data, marker: Union[str, int] = "o", label="", zorder=0, color="#1f77b4",
-                    edgecolors="#1f77b4", size=36, linewidths=1.5, linestyle="solid"):
+                    edgecolors="#1f77b4", size: Union[list, Number] = 36, linewidths=1.5, linestyle="solid",
+                    fixed_marker_size: bool = True, min_size=1, max_size=100, weights=None, max_weight: Number = 0,
+                    min_weight: Number = 0, alpha: Number = 1, alt_axes: Optional[int] = None):
         new_scatter = ScatterData()
         new_scatter.name = name
         new_scatter.x = x_data
@@ -925,6 +1145,14 @@ class ChartData:
         new_scatter.edgecolors = edgecolors
         new_scatter.linewidths = linewidths
         new_scatter.linestyle = linestyle
+        new_scatter.single_size = fixed_marker_size
+        new_scatter.min_size = min_size
+        new_scatter.max_size = max_size
+        new_scatter.weights = weights
+        new_scatter.max_weight = max_weight
+        new_scatter.min_weight = min_weight
+        new_scatter.alpha = alpha
+        new_scatter.alt_axes = alt_axes
         self.data.append(new_scatter)
         return new_scatter
 
@@ -982,7 +1210,8 @@ class ChartData:
         self.data.append(new_ml)
         return new_ml
 
-    def add_ci(self, name, min_x, max_x, y, zorder=0, color="#1f77b4", linestyle="solid", linewidth=1.5):
+    def add_ci(self, name, min_x, max_x, y, zorder=0, color="#1f77b4", linestyle="solid", linewidth=1.5,
+               fixed_line_width: bool = True, min_width=1, max_width=10, weights=None):
         new_ci = ForestCIData()
         new_ci.name = name
         new_ci.min_x = min_x
@@ -992,6 +1221,10 @@ class ChartData:
         new_ci.color = color
         new_ci.linestyle = linestyle
         new_ci.linewidth = linewidth
+        new_ci.single_width = fixed_line_width
+        new_ci.min_width = min_width
+        new_ci.max_width = max_width
+        new_ci.weights = weights
         self.data.append(new_ci)
         return new_ci
 
@@ -1003,16 +1236,52 @@ class ChartData:
         self.data.append(new_labels)
         return new_labels
 
-    def add_annotations(self, name, annotations, x_data, y_data):
+    def add_annotations(self, name, annotations, x_data, y_data, end_x_data=None, end_y_data=None,
+                        halignment: str = "left",valignment: str = "baseline", bbox=None, arrowprops=None,
+                        size="medium", alt_axes: Optional[int] = None):
         new_annotation = AnnotationData()
         new_annotation.name = name
         new_annotation.x = x_data
         new_annotation.y = y_data
+        new_annotation.end_x = end_x_data
+        new_annotation.end_y = end_y_data
         new_annotation.annotations = annotations
+        new_annotation.halignment = halignment
+        new_annotation.valignment = valignment
+        new_annotation.bbox = bbox
+        new_annotation.arrowprops = arrowprops
+        new_annotation.size = size
+        new_annotation.alt_axes = alt_axes
         self.data.append(new_annotation)
         return new_annotation
 
-    def add_fill_area_x(self, name, x1, x2, y, zorder=0, color="red", alpha=0.5):
+
+    def add_rectangle(self, name, x, y, height, width, facecolor="white", edgecolor="black", zorder=1,
+                      clip: bool = True, alt_axes: Optional[int] = None):
+        new_rect = RectangleData()
+        new_rect.name = name
+        new_rect.x = x
+        new_rect.y = y
+        new_rect.height = height
+        new_rect.width = width
+        new_rect.face_color = facecolor
+        new_rect.edge_color = edgecolor
+        new_rect.zorder = zorder
+        new_rect.clip = clip
+        new_rect.alt_axes = alt_axes
+        self.data.append(new_rect)
+        return new_rect
+
+
+    def add_marc_legend(self, name: str, scatter: ScatterData) -> MARCLegendData:
+        new_legend = MARCLegendData()
+        new_legend.name = name
+        new_legend.scatter = scatter
+        self.data.append(new_legend)
+        return new_legend
+
+
+    def add_fill_area_x(self, name, x1, x2, y, zorder=0, color="red", alpha=0.5, alt_axes: Optional[int] = None):
         new_fill = FillDataX()
         new_fill.name = name
         new_fill.x1_values = x1
@@ -1021,6 +1290,7 @@ class ChartData:
         new_fill.color = color
         new_fill.zorder = zorder
         new_fill.alpha = alpha
+        new_fill.alt_axes = alt_axes
         self.data.append(new_fill)
         return new_fill
 
@@ -1035,25 +1305,103 @@ class ChartData:
         self.data.append(new_grid)
         return new_grid
 
+    def add_rainforest(self, name: str, mean_data, var_data, y_data, lower_data, upper_data, weight_data, zorder=0):
+        new_rainforest = RainforestData()
+        new_rainforest.name = name
+        new_rainforest.means = mean_data
+        new_rainforest.vars = var_data
+        new_rainforest.ys = y_data
+        new_rainforest.lower_cis = lower_data
+        new_rainforest.upper_cis = upper_data
+        new_rainforest.weights = weight_data
+        new_rainforest.zorder = zorder
+        self.data.append(new_rainforest)
+        return new_rainforest
+
+    def add_violin(self, name, bs_data, ys, color: str = "#FFDF00", alpha=1):
+        new_violin = ViolinData()
+        new_violin.name = name
+        new_violin.bootstrap_data = bs_data
+        new_violin.ys = ys
+        new_violin.color = color
+        new_violin.alpha = alpha
+        self.data.append(new_violin)
+        return new_violin
+
     def export_to_list(self):
-        outlist = ["X-axis label\t{}\n".format(self.x_label),
-                   "Y-axis label\t{}\n\n\n".format(self.y_label)]
+        outlist = [f"X-axis label\t{self.x_label}\n",
+                   f"Y-axis label\t{self.y_label}\n\n\n"]
         for dat in self.data:
             outlist.extend(dat.export_to_list())
             outlist.append("\n\n")
         return outlist
 
 
+def fill_between_cmap(x, y, y0, v, faxes, cmap=None, vmin=None, vmax=None, zorder=0):
+    """
+    code to fill between two horizontal lines using a color map as one moves horizontally
+
+    this function is heavily modified from code found at
+    https://github.com/cristobaltapia/mpl_fill_cmap_between
+    """
+
+    # generate coordinates for quadmesh
+    """
+    duplicate x coordinates so you get x_1 x_1 x_2 x_2 x_3 x_3 etc.
+    create new y coordinates alternating between y and y0, y_1 y0_1 y_2 y0_2 etc
+    """
+    n = x.size
+    coords_x = numpy.empty((2 * n), dtype=x.dtype)
+    coords_y = numpy.empty((2 * y.size), dtype=y.dtype)
+    coords_x[0::2] = x
+    coords_x[1::2] = x
+    coords_y[0::2] = y0
+    coords_y[1::2] = y
+
+    # combine, rearrange, and reshape coordinates
+    coords = numpy.vstack((coords_x, coords_y))
+    coords = coords.T
+    coords = numpy.asarray(coords, numpy.float64).reshape((n, 2, 2))
+
+    # values for the colormap
+    """
+    duplicate values to match the prior duplication of the coordinates
+    """
+    vals = numpy.empty((2 * n))
+    vals[0::2] = v
+    vals[1::2] = v
+
+    collection = QuadMesh(coordinates=coords, shading="gouraud", zorder=zorder)
+    collection.set_array(vals)
+    collection.set_clim(vmin, vmax)
+    collection.set_cmap(cmap)
+    collection.autoscale_None()
+
+    faxes.add_collection(collection)
+
+
 def base_figure(figure_canvas):
     """
     create the baseline figure used for all plots
     """
-    # figure_canvas = FIGURE_CANVAS
     figure_canvas.figure.clf()  # clean any existing figures
+    figure_canvas.figure.set_layout_engine("none")
     faxes = figure_canvas.figure.subplots()
     faxes.spines["right"].set_visible(False)
     faxes.spines["top"].set_visible(False)
-    # return figure_canvas, faxes
+    return faxes
+
+
+def base_figure_multi(figure_canvas, nr: int = 1, nc: int = 1, height_ratios = None, width_ratios = None):
+    """
+    create the baseline figure used for all plots
+    """
+    figure_canvas.figure.clf()  # clean any existing figures
+    figure_canvas.figure.set_layout_engine("none")
+    faxes = figure_canvas.figure.subplots(nr, nc, height_ratios=height_ratios, width_ratios=width_ratios)
+    for f in faxes:
+        f.spines["right"].set_visible(False)
+        f.spines["top"].set_visible(False)
     return faxes
 
 
@@ -1065,21 +1413,54 @@ def create_figure(chart_data, figure_canvas):
     which subsequently can allow user modification of plot styles and redrawing of the figure w/o needing to
     recalculate anything
     """
-    faxes = base_figure(figure_canvas)
+    if chart_data.multi == MARC_STYLE_2:
+        all_axes = base_figure_multi(figure_canvas, nr=2, nc=1, height_ratios=[2, 3])
+        faxes = all_axes[1]  # primary plot axis
+        faxes2 = all_axes[0]  # area for labeling
+        faxes2.spines["left"].set_visible(False)
+        faxes2.spines["bottom"].set_visible(False)
+        faxes2.set_yticklabels([])
+        faxes2.set_xticklabels([])
+        faxes2.set_xticks([])
+        faxes2.set_yticks([])
+    else:
+        faxes = base_figure(figure_canvas)
+        all_axes = None
+        faxes2 = None
     faxes.set_ylabel(chart_data.y_label)
     faxes.set_xlabel(chart_data.x_label)
     for data in chart_data.data:
         if data.visible:
             if isinstance(data, ScatterData):
-                faxes.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
-                              color=data.color, edgecolors=data.edgecolors, s=data.size, linewidths=data.linewidths,
-                              linestyle=data.linestyle)
+                if data.single_size:
+                    marker_size = data.size
+                else:
+                    # calculate new marker sizes from weights
+                    minw, maxw = data.min_weight, data.max_weight
+                    wrange = maxw - minw
+                    marker_size = [data.min_size + (data.max_size-data.min_size)*(w-minw)/wrange for w in data.weights]
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
+
+                ax.scatter(data.x, data.y, marker=data.marker, label=data.label, zorder=data.zorder,
+                           color=data.color, edgecolors=data.edgecolors, s=marker_size, linewidths=data.linewidths,
+                           linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, LineData):
                 faxes.plot(data.x_values, data.y_values, linestyle=data.linestyle, color=data.color, zorder=data.zorder,
                            linewidth=data.linewidth)
             elif isinstance(data, ForestCIData):
+                if data.single_width:
+                    line_width = data.linewidth
+                else:
+                    # calculate new line widths from weights
+                    minw, maxw = min(data.weights), max(data.weights)
+                    wrange = maxw - minw
+                    line_width = [data.min_width+(data.max_width-data.min_width)*(w-minw)/wrange for w in data.weights]
+
                 faxes.hlines(data.y, data.min_x, data.max_x, zorder=data.zorder, colors=data.color,
-                             linestyles=data.linestyle, linewidth=data.linewidth)
+                             linestyles=data.linestyle, linewidth=line_width)
             elif isinstance(data, LabelData):
                 faxes.set_yticks([y for y in data.y_pos])
                 faxes.set_yticklabels(data.labels)
@@ -1090,48 +1471,127 @@ def create_figure(chart_data, figure_canvas):
                                   linestyle=data.linestyle, zorder=data.zorder, linewidth=data.linewidth)
                 faxes.add_patch(arc)
             elif isinstance(data, AnnotationData):
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
                 for i in range(len(data.annotations)):
-                    faxes.annotate(data.annotations[i], (data.x[i], data.y[i]))
+                    if data.end_x is None:
+                        ax.annotate(data.annotations[i], (data.x[i], data.y[i]), ha=data.halignment, va=data.valignment,
+                                    bbox=data.bbox, arrowprops=data.arrowprops, wrap=True, size=data.size)
+                    else:
+                        ax.annotate(data.annotations[i], (data.x[i], data.y[i]), (data.end_x[i], data.end_y[i]),
+                                    ha=data.halignment, va=data.valignment, size=data.size, wrap=True,
+                                    bbox=data.bbox, arrowprops=data.arrowprops)
+            elif isinstance(data, MARCLegendData):
+                # calculate new marker sizes
+                sc = data.scatter
+                minw, maxw = sc.min_weight, sc.max_weight
+                wrange = maxw - minw
+                legend_size = [math.sqrt(sc.min_size + (sc.max_size - sc.min_size)*(w-minw)/wrange)
+                               for w in data.legend_weights]
+
+                legend_elements = []
+                for i, s in enumerate(data.legend_weights):
+                    legend_elements.append(Line2D([0], [0], marker="o", color="None",
+                                                  label=format(s, data.legend_formats[i]),
+                                                  markerfacecolor=sc.color, markeredgecolor="None",
+                                                  markersize=legend_size[i]))
+                # legend_artist = figure_canvas.figure.legend(handles=legend_elements, loc="outside right center", borderpad=1, labelspacing=1,
+                #                              title="Relative Weight")
+                # figure_canvas.figure.set_layout_engine("constrained")
+                legend_artist = faxes.legend(handles=legend_elements, loc="center left", borderpad=1, labelspacing=1,
+                                             title="Relative Weight")
+
+                # add arrows around legend
+                faxes.annotate("More certain", (0.5, 1), (0.5, 1.5), xycoords=legend_artist,
+                               ha="center", va="center", arrowprops=dict(facecolor="black", arrowstyle="<-"))
+                faxes.annotate("Less certain", (0.5, 0), (0.5, -0.5), xycoords=legend_artist,
+                               ha="center", va="center", arrowprops=dict(facecolor="black", arrowstyle="<-"))
+
+
+            elif isinstance(data, RectangleData):
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
+                rectangle = matplotlib.patches.Rectangle((data.x, data.y), data.width, data.height,
+                                                         facecolor=data.face_color, edgecolor=data.edge_color,
+                                                         zorder=data.zorder, clip_on=data.clip)
+                ax.add_patch(rectangle)
             elif isinstance(data, HistogramData):
                 faxes.hist(data.bins[:-1], data.bins, weights=data.counts, edgecolor=data.edgecolor, color=data.color,
-                           linewidth=data.linewidth, linestyle=data.linestyle)
+                           linewidth=data.linewidth, linestyle=data.linestyle, alpha=data.alpha)
             elif isinstance(data, FillDataX):
-                faxes.fill_betweenx(data.y_values, data.x1_values, data.x2_values, color=data.color,
-                                    edgecolor="none", zorder=data.zorder,
-                                    alpha=data.alpha)
+                if data.alt_axes is None:
+                    ax = faxes
+                else:
+                    ax = all_axes[data.alt_axes]
+                ax.fill_betweenx(data.y_values, data.x1_values, data.x2_values, color=data.color,
+                                 edgecolor="none", zorder=data.zorder, alpha=data.alpha)
             elif isinstance(data, ColorGrid):
-                # ax2 = faxes.twinx()
-                # max_z = numpy.max(data.z_values)
-                # min_z = numpy.min(data.z_values)
-                # ax2.set_ylim(min_z, max_z)
-                # if chart_data.invert_y:
-                #     ax2.invert_yaxis()
-                # faxes.set_zorder(ax2.get_zorder()+1)
-                # faxes.set_frame_on(False)
                 cm = faxes.pcolormesh(data.x_values, data.y_values, data.z_values, shading="gouraud",
                                  cmap=data.colormap, zorder=0, vmin=0, vmax=100)
                 figure_canvas.figure.colorbar(cm, ax=faxes, label=data.label_name)
+            elif isinstance(data, RainforestData):
+                minw, maxw = min(data.weights), max(data.weights)
+                wrange = maxw - minw
+                nsteps = 500
+                sf = 2
+                # find max pdf for scaling shading across the rainforest droplets
+                maxadj = 0
+                for i in range(len(data.means)):
+                    wscale = 1+(sf-1)*(data.weights[i] - minw)/wrange  # scale between 1 and scaling factor
+                    x = numpy.linspace(data.lower_cis[i], data.upper_cis[i], nsteps)
+                    yadj = scipy.stats.norm.pdf(x, loc=data.means[i], scale=math.sqrt(data.vars[i]))
+                    maxadj = max(maxadj, max(yadj * wscale))
+                # draw rainforest droplets
+                for i in range(len(data.means)):
+                    wscale = 1+(sf-1)*(data.weights[i] - minw)/wrange  # scale between 1 and scaling factor
+                    x = numpy.linspace(data.lower_cis[i], data.upper_cis[i], nsteps)
+                    yadj = scipy.stats.norm.pdf(x, loc=data.means[i], scale=math.sqrt(data.vars[i]))
+                    fill_between_cmap(x, data.ys[i] + yadj*wscale, data.ys[i] - yadj*wscale, yadj*wscale, faxes,
+                                      cmap=data.colormap, vmax=maxadj, zorder=data.zorder)
+            elif isinstance(data, ViolinData):
+                for i, d in enumerate(data.bootstrap_data):
+                    if d is not None:
+                        parts = faxes.violinplot(d, [data.ys[i]], points=1000, orientation="horizontal",
+                                                 widths=FOREST_STEP-1, showmeans=False, showmedians=False,
+                                                 showextrema=False)
+                        for pc in parts["bodies"]:
+                            pc.set_color(data.color)
+                            pc.set_alpha(data.alpha)
 
     if chart_data.suppress_y:
         faxes.spines["left"].set_visible(False)
     if chart_data.rescale_x is not None:
         faxes.set_xlim(chart_data.rescale_x[0], chart_data.rescale_x[1])
+        if chart_data.multi == MARC_STYLE_2:
+            faxes2.set_xlim(chart_data.rescale_x[0], chart_data.rescale_x[1])
+    if chart_data.rescale_y is not None:
+        faxes.set_ylim(chart_data.rescale_y[0], chart_data.rescale_y[1])
     if chart_data.invert_y:
         faxes.invert_yaxis()
+    if chart_data.multi == MARC_STYLE_2:
+        figure_canvas.figure.subplots_adjust(hspace=0.05)
+
 
 
 def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float = 0.05,
                       bootstrap_n: Optional[int] = None, extra_name: Optional[str] = None,
-                      normal_ci: bool = True) -> ChartData:
+                      normal_ci: bool = True, fp_style: int = FP_STYLE_PLAIN) -> ChartData:
     chart_data = ChartData(analysis_type)
     chart_data.caption.e_label = effect_name
     chart_data.caption.alpha = alpha
     chart_data.caption.bootstrap_n = bootstrap_n
     chart_data.caption.normal_ci = normal_ci
+    is_basic = False
     if analysis_type == "grouped analysis":
         chart_data.caption.group_label = extra_name
     elif analysis_type == "cumulative analysis":
         chart_data.caption.order_label = extra_name
+    elif analysis_type == "basic analysis":
+        is_basic = True
 
     chart_data.x_label = effect_name
     chart_data.suppress_y = True
@@ -1143,11 +1603,12 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
 
     n_effects = len(forest_data)
 
-    y_data = [-d.order for d in forest_data]
+    y_data = [-FOREST_STEP*d.order for d in forest_data]
     ci_y_data = [y for y in y_data for _ in range(2)]
     labels = [d.name for d in forest_data]
 
     mean_data = [d.mean for d in forest_data]
+    var_data = [d.variance for d in forest_data]
     is_data = False
     for d in forest_data:
         if d.median is not None:
@@ -1157,9 +1618,57 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
     else:
         median_data = None
 
+    # used for scaled, thick, and rainforest styles
+    if is_basic:
+        # for a basic analysis, replace the weight of the first entry (the mean) with the average of the
+        # other weights
+        tmpweights = [1/d.variance for d in forest_data[1:]]
+        # meanw = max(tmpweights)
+        meanw = sum(tmpweights)/len(tmpweights)
+        weights = [meanw]
+        weights.extend(tmpweights)
+    else:
+        weights = [1/d.variance for d in forest_data]  # get weights
+
+    minw, maxw = min(weights), max(weights)
+    wrange = maxw - minw
+
+    min_marker_size = 1
+    max_marker_size = 100
+    linewidth = 1.5
+    min_line_width = 1
+    max_line_width = 10
+    marker = "o"
+    marker_color = "#1f77b4"
+    fixed_marker_size = True
+    fixed_line_width = True
+    ci_color = "#1f77b4"
+    no_z = 1
+    if fp_style == FP_STYLE_SCALED:
+        # scale between min and max marker size
+        size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in weights]
+        fixed_marker_size = False
+    elif fp_style == FP_STYLE_THICK:
+        size = 100
+        marker = "|"
+        marker_color = "red"
+        # scale between min and max line widths
+        linewidth = [min_line_width+(max_line_width-min_line_width)*(w - minw)/wrange for w in weights]
+        fixed_line_width = False
+    elif fp_style == FP_STYLE_RAINFOREST:
+        size = 200
+        marker = "|"
+        marker_color = "white"
+        linewidth = 1
+        ci_color = "white"
+        no_z = 10
+    else:
+        size = 36
+
     cis = []
     bs_cis = []
     bias_cis = []
+    bs_values = []
     for d in forest_data:
         cis.extend([d.lower_ci, d.upper_ci])
     min_cis = [d.lower_ci for d in forest_data]
@@ -1170,12 +1679,23 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         for i, d in enumerate(forest_data):
             bs_cis.extend([d.lower_bs_ci, d.upper_bs_ci])
             bias_cis.extend([d.lower_bias_ci, d.upper_bias_ci])
+            bs_values.append(d.bootstrapped_means)
 
-    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0, -(n_effects+1),
-                                                       color="silver", linestyle="dotted", zorder=1)
-    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3)
-    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker="o", zorder=5,
-                                                      label="mean and {:0.0%} CI (t-dist)".format(1-alpha))
+    chart_data.caption.no_effect = chart_data.add_line(get_text("Line of No Effect"), 0, 0, 0,
+                                                       -(FOREST_STEP*(n_effects+1)), color="silver",
+                                                       linestyle="dotted", zorder=no_z)
+    chart_data.add_ci(get_text("Confidence Intervals"), min_cis, max_cis, y_data, zorder=3, linewidth=linewidth,
+                      fixed_line_width=fixed_line_width, min_width=min_line_width, max_width=max_line_width,
+                      weights=weights, color=ci_color)
+    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, y_data, marker=marker, zorder=5,
+                                                      label="mean and {:0.0%} CI (t-dist)".format(1-alpha), size=size,
+                                                      color=marker_color, fixed_marker_size=fixed_marker_size,
+                                                      min_size=min_marker_size, max_size=max_marker_size,
+                                                      weights=weights, max_weight=maxw, min_weight=minw)
+    if fp_style == FP_STYLE_RAINFOREST:
+        chart_data.add_rainforest(get_text("PDF Raindrops"), mean_data, var_data, y_data, min_cis, max_cis, weights)
+
+    chart_data.caption.style = fp_style
     if median_data is not None:
         chart_data.caption.medians = chart_data.add_scatter(get_text("Medians"), median_data, y_data, marker="x",
                                                             label="median", zorder=5, color="#ff7f0e")
@@ -1189,6 +1709,148 @@ def chart_forest_plot(analysis_type: str, effect_name, forest_data, alpha: float
         chart_data.caption.bias = chart_data.add_scatter(get_text("Bias-corrected Bootstrap Confidence Limits"),
                                                          bias_cis, ci_y_data, marker=7, zorder=4, color="#d62728",
                                                          label="{:0.0%} CI (bias-corrected bootstrap)".format(1-alpha))
+        chart_data.caption.boot_violin = chart_data.add_violin(get_text("Bootstrap Distribution"), bs_values,
+                                                               y_data)
+
+    return chart_data
+
+
+def chart_marc_plot(analysis_type: str, effect_name, marc_data, alpha: float = 0.05, marc_style: int = 0) -> ChartData:
+    if marc_style == MARC_STYLE_2:
+        multi = MARC_STYLE_2
+    else:
+        multi = None
+    chart_data = ChartData(analysis_type, multi=multi)
+    chart_data.caption.e_label = effect_name
+    chart_data.caption.alpha = alpha
+    chart_data.caption.style = marc_style
+
+    chart_data.x_label = effect_name
+    chart_data.y_label = get_text("Relative Weight")
+
+    if marc_style != MARC_STYLE_0:
+        grand_mean = marc_data[0]  # identify the grand mean
+    else:
+        grand_mean = None
+
+    if marc_style == MARC_STYLE_2:
+        # remove the mean from the primary data set for style 2
+        marc_data = marc_data[1:]
+
+    mean_data = [d.mean for d in marc_data]
+    max_x = max(numpy.abs(mean_data))*1.1  # set x-limits to 10% more than largest value in either direction
+    chart_data.rescale_x = [-max_x, max_x]
+
+    raw_weights = [1 / d.variance for d in marc_data]  # get weights
+    if marc_style == MARC_STYLE_1:
+        total_weights = sum(raw_weights[1:])  # skip first entry (mean) when included
+    else:  # used for plot of studies which exclude calculated mean
+        total_weights = sum(raw_weights)
+    rel_weights = [w/total_weights for w in raw_weights]
+    minw, maxw = min(rel_weights), max(rel_weights)
+
+    if marc_style == MARC_STYLE_0:
+        if maxw < 0.1:
+            maxw = 0.1
+        maxwy = maxw
+    else:
+        if marc_style == MARC_STYLE_2:
+            maxwy = maxw
+        else:
+            maxwy = 1
+        maxw = 1
+    minw = 0
+
+    wrange = maxwy - minw
+    min_marker_size = 1
+    if marc_style == MARC_STYLE_0:
+        max_marker_size = 400
+    else:
+        max_marker_size = 1600  # use larger default max when mean is included
+
+    size = [min_marker_size+(max_marker_size-min_marker_size)*(w - minw)/wrange for w in rel_weights]
+    max_y = maxwy*1.1
+    min_y = -wrange/10
+    chart_data.rescale_y = [min_y, max_y]  # set scale for y-axis
+
+    chart_data.caption.no_effect = chart_data.add_line(get_text("Lines of No Effect and Weight"), 0, min_y, 0, max_y,
+                                                       color="darkgray", linestyle="solid", zorder=2)
+    base_line = chart_data.add_line("", -max_x, 0, max_x, 0, color="darkgray", linestyle="solid", zorder=2)
+    chart_data.caption.no_effect.link_style(base_line)
+
+    chart_data.caption.means = chart_data.add_scatter(get_text("Means"), mean_data, rel_weights, marker="o", zorder=5,
+                                                      label="mean", size=size, fixed_marker_size=False,
+                                                      min_size=min_marker_size, max_size=max_marker_size,
+                                                      weights=rel_weights, max_weight=maxw, min_weight=minw)
+    if marc_style == MARC_STYLE_2:
+        chart_data.add_scatter("", [grand_mean.mean], [1], marker="o", zorder=5, label="mean", size=max_marker_size,
+                               weights=[1], max_weight=1, min_weight=minw, alt_axes=0)
+
+    if marc_style != MARC_STYLE_0:
+        # simulate point cloud around mean
+        nsim = 250  # there is no obvious reason to simulate 10,000 points then subsample from that
+        if marc_style == MARC_STYLE_1:
+            cloud_scale = 10
+        else:
+            cloud_scale = 1
+        sim_color = "darkblue"
+        sim_x = scipy.stats.norm.rvs(loc=grand_mean.mean, scale=math.sqrt(grand_mean.variance), size=nsim)
+        # simulate y values for corresponding normal deviates within a raindrop like distribution
+        sim_y = scipy.stats.norm.pdf(sim_x, loc=grand_mean.mean, scale=math.sqrt(grand_mean.variance))
+        max_sim = max(sim_y)
+        sim_y /= max_sim*cloud_scale  # rescale the PDF so values are between 0 and 1/cloud_scale
+        sim_y2 = scipy.stats.uniform.rvs(scale=sim_y)  # calculate random uniform deviates based on the rescaled PDF
+        sim_y = sim_y2 - sim_y/2 + 1  # shift values so they are centered on a value of 1
+        if marc_style == MARC_STYLE_2:
+            alt_axes = 0
+        else:
+            alt_axes = None
+        chart_data.add_scatter("", sim_x, sim_y, marker="o", size=9, alpha=0.2, color="white", edgecolors=sim_color,
+                               zorder=20, linewidths=0.5, alt_axes=alt_axes)
+        min_sim_y = min(sim_y)
+        i = numpy.where(sim_y == min_sim_y)[0][0]  # find a point with the lowest y coordinate
+        an_x, an_y = sim_x[i], sim_y[i]
+        if marc_style == MARC_STYLE_1:
+            an_x2, an_y2 = an_x+max_x/10, an_y-0.1
+        else:
+            an_x2, an_y2 = an_x+max_x/10, 0
+
+        # add annotation to a low point
+        tmp_txt = get_text("MARC_point_annotation").format(f"{1-alpha:0.1%}", f"{grand_mean.lower_ci:0.2}",
+                                                           f"{grand_mean.upper_ci:0.2}", f"{grand_mean.mean:0.3}")
+        chart_data.add_annotations("", [tmp_txt], [an_x], [an_y], end_x_data=[an_x2], end_y_data=[an_y2],
+                                   valignment="top", size="small", halignment="center",
+                                   bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="darkgray", lw=2),
+                                   arrowprops=dict(edgecolor=sim_color, arrowstyle="<-",
+                                                   connectionstyle="arc3,rad=-0.5"), alt_axes=alt_axes)
+        # create background rectangle at top of chart and add text to it
+        if marc_style == MARC_STYLE_1:
+            chart_data.add_rectangle("", -max_x+max_x/20, 0.91, width=2*max_x-max_x/10, height=0.18, facecolor="white",
+                                     zorder=2, edgecolor="black")
+        else:
+            chart_data.add_rectangle("", -max_x+max_x/20, 0.2, width=2*max_x-max_x/10, height=1.6, facecolor="white",
+                                     zorder=2, edgecolor="black", alt_axes=alt_axes)
+        chart_data.add_annotations("", [get_text("SUMMARY OF THE EVIDENCE:")], [-max_x+max_x/10], [1],
+                                   valignment="center", size="large", halignment="left", alt_axes=alt_axes)
+        chart_data.add_annotations("", [get_text("MARC_summary_label").format(f"{grand_mean.mean:0.3}")],
+                                   [max_x*0.9], [1], valignment="center", halignment="right", alt_axes=alt_axes)
+
+    # background colors
+    chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [min_y, max_y], color="red", alpha=0.25,
+                               zorder=1)
+    chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [min_y, max_y], color="blue", alpha=0.25,
+                               zorder=1)
+    if marc_style == MARC_STYLE_2:
+        chart_data.add_fill_area_x(get_text("Negative Background"), -max_x, 0, [-1, 2], color="red", alpha=0.25,
+                                   zorder=1, alt_axes=0)
+        chart_data.add_fill_area_x(get_text("Positive Background"), 0, max_x, [-1, 2], color="blue", alpha=0.25,
+                                   zorder=1, alt_axes=0)
+
+    # bottom annotations
+    chart_data.add_annotations("", [get_text("Negative Effect"), get_text("Positive Effect")],
+                               [-max_x/2, max_x/2], [min_y/2, min_y/2], halignment="center", valignment="center",
+                               bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="darkgray", lw=2))
+    chart_data.add_marc_legend("", chart_data.caption.means)
 
     return chart_data
 
@@ -1242,21 +1904,12 @@ def add_quantile_axes_to_chart(x_data, y_data, slope: float, intercept: float, c
     y_lower = [y_pos[i] - t_score*math.sqrt(mse*(1 + 1/n + ((x_pos[i] - x_mean)**2)/ss_x)) for i in range(nsteps)]
     y_upper = [y_pos[i] + t_score*math.sqrt(mse*(1 + 1/n + ((x_pos[i] - x_mean)**2)/ss_x)) for i in range(nsteps)]
 
-    # chart_data.caption.lower_limit = chart_data.add_multi_line(get_text("Lower Prediction Limit"), x_pos, y_lower,
-    #                                                            linestyle="dashed", color="silver", zorder=3)
-    # chart_data.caption.upper_limit = chart_data.add_multi_line(get_text("Upper Prediction Limit"), x_pos, y_upper,
-    #                                                            linestyle="dashed", color="silver", zorder=3)
     chart_data.caption.prediction_limit = chart_data.add_multi_line(get_text("Prediction Limits"), x_pos, y_lower,
                                                                     linestyle="dashed", color="silver", zorder=3)
     upper_limit = chart_data.add_multi_line("", x_pos, y_upper, linestyle="dashed", color="silver", zorder=3)
     chart_data.caption.prediction_limit.link_style(upper_limit)
 
     # draw center lines
-    # chart_data.caption.horizontal_mean = chart_data.add_line(get_text("Horizontal Axis Mean Line"), 0,
-    #                                                          min(y_min, min(y_lower)), 0, max(y_max, max(y_upper)),
-    #                                                          linestyle="dotted", color="silver")
-    # chart_data.caption.vertical_mean = chart_data.add_line(get_text("Vertical Axis Mean Line"), x_min, y_mean, x_max,
-    #                                                        y_mean, linestyle="dotted", color="silver")
     chart_data.caption.means = chart_data.add_line(get_text("Axes Means"), 0, min(y_min, min(y_lower)), 0,
                                                    max(y_max, max(y_upper)), linestyle="dotted", color="silver")
     vertical_mean = chart_data.add_line("", x_min, y_mean, x_max, y_mean, linestyle="dotted", color="silver")
@@ -1546,10 +2199,6 @@ def chart_funnel_plot(x_data, y_data, mean_e, x_label: str = "x", y_label: str =
 
     if (y_label != "sample size") and (do_pseudo or do_contour or do_power):
         curve_y = numpy.linspace(y_min, y_max, 50)  # 50 points for a nice curve
-        # if y_label in ("standard error", "variance"):
-        #     curve_y = numpy.linspace(min(y_min, 0.001), y_max*1.15, 50)  # 50 points for a nice curve
-        # else:
-        #     curve_y = numpy.linspace(y_min*0.85, y_max*1.15, 50)  # 50 points for a nice curve
         if y_label == "standard error":
             sey = curve_y
         elif y_label == "precision":
@@ -1594,7 +2243,6 @@ def chart_funnel_plot(x_data, y_data, mean_e, x_label: str = "x", y_label: str =
         if do_power:
             z = scipy.stats.norm.ppf(0.975)
             power = 100*(1 - scipy.stats.norm.cdf(z - mean_e/sey) + scipy.stats.norm.cdf(-z - mean_e/sey))
-            # x = numpy.linspace(x_min, x_max, 50)
             x = [x_min, x_max]
             xc, yc = numpy.meshgrid(x, curve_y)
             zc = numpy.array([power for _ in x]).transpose()
@@ -1623,7 +2271,7 @@ def chart_stnd_regression(x_name, y_name, x_data, y_data, slope, intercept, mode
 
 def find_color_name(color: str) -> str:
     """
-    Given a color as a hex string, e.g., #0123A5, find the closest named color from the CSS 4 color name list
+    Given a color as a hex string, e.g., #0123A5, find the closest named color from a color name space
     and return that name
     """
     if color_name_space == "X11/CSS4":

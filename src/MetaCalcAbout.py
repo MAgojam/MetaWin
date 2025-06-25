@@ -11,11 +11,11 @@ class MetaCalcAbout(QDialog):
 
     def init_ui(self):
         ok_button = add_ok_button(self)
-        title_label = QLabel("<span style=\"font-size:20px; font-weight: bold;\">MetaWin</span>")
-        subtitle_label = QLabel("<span style=\"font-size:14px; font-weight: bold;\">Statistical Calculator</span>")
+        title_label = QLabel('<span style="font-size:20px; font-weight: bold;">MetaWin</span>')
+        subtitle_label = QLabel('<span style="font-size:14px; font-weight: bold;">Statistical Calculator</span>')
         author_label = QLabel("Michael S. Rosenberg")
-        version_text = "{}.{}.{}".format(MetaWinConstants.MAJOR_VERSION, MetaWinConstants.MINOR_VERSION,
-                                         MetaWinConstants.PATCH_VERSION)
+        version_text = (f"{MetaWinConstants.MAJOR_VERSION}.{MetaWinConstants.MINOR_VERSION}."
+                        f"{MetaWinConstants.PATCH_VERSION}")
         version_label = QLabel(version_text)
         layout = QVBoxLayout()
         layout.addWidget(title_label)

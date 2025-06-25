@@ -243,7 +243,7 @@ def trim_and_fill_analysis(data, options, decimal_places: int = 4, alpha: float 
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1-alpha, df=df, loc=mean_e, scale=math.sqrt(var_e))
         original_mean_data = mean_data_tuple(get_text("Original Mean"), 0, n, mean_e, median_e, var_e, mean_v,
-                                             lower_ci, upper_ci, 0, 0, 0, 0)
+                                             lower_ci, upper_ci, 0, 0, 0, 0, None)
         original_mean = mean_e
 
         trim_n = -1
@@ -330,7 +330,7 @@ def trim_and_fill_analysis(data, options, decimal_places: int = 4, alpha: float 
         else:
             lower_ci, upper_ci = scipy.stats.t.interval(confidence=1-alpha, df=df, loc=mean_e, scale=math.sqrt(var_e))
         trim_mean_data = mean_data_tuple(get_text("Trim and Fill Mean"), 0, n+trim_n, mean_e, median_e, var_e, mean_v,
-                                         lower_ci, upper_ci, 0, 0, 0, 0)
+                                         lower_ci, upper_ci, 0, 0, 0, 0, None)
 
         # output
         output_blocks.append([get_text("Trim and Fill Analysis estimated {} missing studies.").format(trim_n)])
